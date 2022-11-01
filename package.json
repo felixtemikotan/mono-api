@@ -1,0 +1,25 @@
+{
+    "name": "mono-api",
+    "version": "1.0.0",
+    "description": "This app exemplifies mono api calls",
+    "main": "index.js",
+    "scripts": {
+        "build": "npx ts-node build.ts",
+        "lint": "npx eslint --ext .ts src/",
+        "lint:tests": "npx eslint --ext .ts spec/",
+        "compile": "tsc -w",
+        "dev": "nodemon ./bin/www",
+        "test": "jest"
+    },
+
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/felixtemikotan/mono-api/issues"
+    },
+    "homepage": "https://github.com/felixtemikotan/mono-api#readme",
+    "dependencies": {
+        "express-generator-typescript": "^2.2.6"
+    }
+}
