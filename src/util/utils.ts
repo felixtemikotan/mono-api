@@ -30,14 +30,16 @@ export const createBankAccountSchema = Joi.object({
     accountnumber: Joi.string().required().length(10).pattern(/^[0-9]+$/),
     accountname: Joi.string().required(),
     bankname: Joi.string().required(),
-    accounttype: Joi.string().required()
+    accounttype: Joi.string().required(),
+    banktransactiontype: Joi.string().required()
 });
 
 export const updateBankAccountSchema = Joi.object({
     accountnumber: Joi.string().length(10).pattern(/^[0-9]+$/),
     accountname: Joi.string(),
     bankname: Joi.string(),
-    accounttype: Joi.string()
+    accounttype: Joi.string(),
+    banktransactiontype: Joi.string()
 })
 
 export const generateToken=(user:{[key:string]:unknown}):unknown=>{

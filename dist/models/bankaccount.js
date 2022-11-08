@@ -38,6 +38,10 @@ BankAccountInstance.init({
     accounttype: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
+    },
+    banktransactiontype: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false
     }
 }, {
     sequelize: database_config_1.default,

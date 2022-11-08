@@ -141,18 +141,25 @@ async function createBankAccount(req, res, next) {
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { accountnumber, accountname, bankname, bankcode, accounttype } = req.body;
+        const { accountnumber, accountname, bankname, bankcode, accounttype, banktransactiontype } = req.body;
         const duplicateAccountnumber = await bankaccount_1.BankAccountInstance.findOne({ where: { accountnumber } });
         if (duplicateAccountnumber) {
             return res.status(409).json({ status: 409, error: 'Accountnumber already exist' });
         }
         const id = (0, uuid_1.v4)();
-        let { data } = await (0, flutter_1.getAllBanksNG)();
-        const bankCode = data.filter((item) => item.name.toLowerCase() == bankname.toLowerCase());
+        const { data } = await (0, flutter_1.getAllBanksNG)();
+        const banksData = data.map((bank) => {
+            let allBanksData = {};
+            allBanksData.bankId = bank._id;
+            allBanksData.bankname = bank.name;
+            allBanksData.type = bank.type;
+            return allBanksData;
+        });
+        const bankCode = banksData.filter((item) => item.bankname.toLowerCase() == bankname.toLowerCase());
         if (bankCode.length == 0) {
-            return res.status(404).json({ status: 404, msg: 'Bank not found', data });
+            return res.status(404).json({ status: 404, msg: 'Bank not found', banksData });
         }
-        let code = bankCode[0].code;
+        let code = bankCode[0]._id;
         const bankaccount = await bankaccount_1.BankAccountInstance.create({
             id: id,
             userId: userId,
@@ -161,6 +168,7 @@ async function createBankAccount(req, res, next) {
             bankname: bankname,
             bankcode: code,
             accounttype: accounttype,
+            banktransactiontype: banktransactiontype,
         });
         return res.status(201).json({ status: 201, msg: 'Bank Account created successfully', bankaccount });
     }
@@ -176,16 +184,26 @@ async function updateBankAccount(req, res, next) {
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { accountnumber, accountname, bankname, bankcode, accounttype } = req.body;
+        const { accountnumber, accountname, bankname, bankcode, accounttype, banktransactiontype } = req.body;
         const bankaccount = await bankaccount_1.BankAccountInstance.findOne({ where: { id } });
         if (!bankaccount) {
             return res.status(404).json({ status: 404, error: 'Bank Account not found' });
         }
-        let { data } = await (0, flutter_1.getAllBanksNG)();
-        const bankCode = data.filter((item) => item.name.toLowerCase() == bankname.toLowerCase());
-        let code = bankCode[0].code;
+        const { data } = await (0, flutter_1.getAllBanksNG)();
+        const banksData = data.map((bank) => {
+            let allBanksData = {};
+            allBanksData.bankId = bank._id;
+            allBanksData.bankname = bank.name;
+            allBanksData.type = bank.type;
+            return allBanksData;
+        });
+        const bankCode = banksData.filter((item) => item.bankname.toLowerCase() == bankname.toLowerCase());
+        if (bankCode.length == 0) {
+            return res.status(404).json({ status: 404, msg: 'Bank not found', banksData });
+        }
+        let code = bankCode[0]._id;
         const record = await bankaccount_1.BankAccountInstance.update({ accountnumber: accountnumber, accountname: accountname,
-            bankname: bankname, bankcode: code, accounttype: accounttype }, { where: { id } });
+            bankname: bankname, bankcode: code, accounttype: accounttype, banktransactiontype: banktransactiontype }, { where: { id } });
         return res.status(200).json({ status: 200, msg: 'Bank Account updated successfully', record });
     }
     catch (error) {

@@ -9,6 +9,7 @@ interface BankAccountAtrribute{
     bankname:string;
     bankcode:string;
     accounttype:string;
+    banktransactiontype:string;
 }
 
 export class BankAccountInstance extends Model<BankAccountAtrribute>{}
@@ -43,7 +44,12 @@ BankAccountInstance.init(
         accounttype:{
             type:DataTypes.STRING,
             allowNull:false
+        },
+        banktransactiontype:{
+            type:DataTypes.STRING,
+            allowNull:false
         }
+
     },
     {
         sequelize:db,

@@ -31,13 +31,15 @@ exports.createBankAccountSchema = joi_1.default.object({
     accountnumber: joi_1.default.string().required().length(10).pattern(/^[0-9]+$/),
     accountname: joi_1.default.string().required(),
     bankname: joi_1.default.string().required(),
-    accounttype: joi_1.default.string().required()
+    accounttype: joi_1.default.string().required(),
+    banktransactiontype: joi_1.default.string().required()
 });
 exports.updateBankAccountSchema = joi_1.default.object({
     accountnumber: joi_1.default.string().length(10).pattern(/^[0-9]+$/),
     accountname: joi_1.default.string(),
     bankname: joi_1.default.string(),
-    accounttype: joi_1.default.string()
+    accounttype: joi_1.default.string(),
+    banktransactiontype: joi_1.default.string()
 });
 const generateToken = (user) => {
     const pass = process.env.JWT_SECRET;
