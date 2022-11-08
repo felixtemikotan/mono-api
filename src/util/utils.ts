@@ -19,11 +19,22 @@ export const updateUserSchema = Joi.object({
     lastname: Joi.string(),
     email: Joi.string().email(),
     phonenumber: Joi.string().length(11).pattern(/^[0-9]+$/),
-})
+});
 
 export const loginUserSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required()
+});
+
+export const monoLoginSchema= Joi.object({
+    username: Joi.string().required(),
+    password: Joi.string().required(),
+    sessionId: Joi.string().required()
+});
+
+export const createMonoSessionSchema = Joi.object({
+    institution: Joi.string().required(),
+    auth_method: Joi.string().required(),
 });
 
 export const createBankAccountSchema = Joi.object({
@@ -40,7 +51,7 @@ export const updateBankAccountSchema = Joi.object({
     bankname: Joi.string(),
     accounttype: Joi.string(),
     banktransactiontype: Joi.string()
-})
+});
 
 export const generateToken=(user:{[key:string]:unknown}):unknown=>{
     const pass = process.env.JWT_SECRET as string
