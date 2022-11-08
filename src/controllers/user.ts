@@ -260,16 +260,16 @@ export async function monoLogin(req:Request,res:Response,next:NextFunction){
 
         const bankUrl = `${BASE_API_URL}/v1/connect/login`;
         //const response = await axios.post(bankUrl);
-console.log(1);
+
         const response = await axios.post(`${BASE_API_URL}/v1/connect/login`, {
             username: username,
             password: password
         },
         {
-            headers: { 'mono-sec-key': monoSecretKey, 'x-session-id': sessionId, },
-        }
+            headers: { 'mono-sec-key': monoSecretKey as string,  'x-session-id': sessionId as string, 'Content-Type': 'application/json'  },
+        },
         )
-        console.log(2);
+        
         if(response.status == 200){
 
         return res.status(200).json({ status: 200, msg: 'Mono Login successful',response });
@@ -294,7 +294,7 @@ export async function createMonoSession(req:Request,res:Response,next:NextFuncti
             auth_method: auth_method
         },
         {
-            headers: { 'mono-sec-key': monoSecretKey},
+            headers: { "mono-sec-key": monoSecretKey},
         }
         )
         const {data}:any = response;
@@ -321,7 +321,7 @@ export async function tokenSignin(req:Request,res:Response,next:NextFunction){
             
         },
         {
-            headers: { 'mono-sec-key': monoSecretKey, 'x-session-id': sessionId, },
+            headers: { "mono-sec-key": monoSecretKey, "x-session-id": sessionId, },
         }
         )
         const {data}:any = response;
