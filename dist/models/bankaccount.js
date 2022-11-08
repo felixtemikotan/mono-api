@@ -3,48 +3,43 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserInstance = void 0;
+exports.BankAccountInstance = void 0;
 const sequelize_1 = require("sequelize");
 const database_config_1 = __importDefault(require("../config/database.config"));
-const bankaccount_1 = require("./bankaccount");
-class UserInstance extends sequelize_1.Model {
+class BankAccountInstance extends sequelize_1.Model {
 }
-exports.UserInstance = UserInstance;
-UserInstance.init({
+exports.BankAccountInstance = BankAccountInstance;
+BankAccountInstance.init({
     id: {
         type: sequelize_1.DataTypes.STRING,
         primaryKey: true,
         allowNull: false
     },
-    firstname: {
+    userId: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
-    lastname: {
+    accountnumber: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
-    username: {
+    accountname: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
-    email: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
-        unique: true
-    },
-    phonenumber: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
-        unique: true
-    },
-    password: {
+    bankname: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
+    bankcode: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false
+    },
+    accounttype: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false
+    }
 }, {
     sequelize: database_config_1.default,
-    tableName: 'userTable'
+    tableName: 'bankaccountTable'
 });
-UserInstance.hasMany(bankaccount_1.BankAccountInstance, { foreignKey: "userId", as: "groups" });
-bankaccount_1.BankAccountInstance.belongsTo(UserInstance, { foreignKey: "userId", as: "user" });

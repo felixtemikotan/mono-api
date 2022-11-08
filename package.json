@@ -13,6 +13,8 @@
     "dependencies": {
         "@types/cors": "^2.8.12",
         "@types/http-errors": "^2.0.1",
+        "@types/joi": "^17.2.3",
+        "@types/pg": "^8.6.5",
         "@types/sequelize": "^4.28.14",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
@@ -20,8 +22,10 @@
         "express": "^4.18.2",
         "express-generator-typescript": "^2.2.6",
         "http-errors": "^2.0.0",
+        "joi": "^17.7.0",
         "jsonwebtoken": "^8.5.1",
         "morgan": "^1.10.0",
+        "pg": "^8.8.0",
         "sequelize": "^6.25.5"
     },
     "devDependencies": {

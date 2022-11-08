@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-//import {Client} from 'pg';
+import {Client} from 'pg';
 import { db_host, db_port, db_name, db_user, db_password } from './config';
 
  const db = new Sequelize({

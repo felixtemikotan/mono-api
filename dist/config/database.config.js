@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
-//import {Client} from 'pg';
 const config_1 = require("./config");
 const db = new sequelize_1.Sequelize({
     dialect: "postgres",
