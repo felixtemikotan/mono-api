@@ -285,19 +285,20 @@ export async function createMonoSession(req:Request,res:Response,next:NextFuncti
         }
         const { institution,auth_method } = req.body;
         const BASE_API_URL = 'https://api.withmono.com'
-        const response:any = await axios.post(`${BASE_API_URL}/v1/connect/login`, {
+        const response:any = await axios.post(`${BASE_API_URL}/v1/connect/session`, {
             app: monoAppId,
             institution: institution,
             auth_method: auth_method
         },
         {
-            headers: { 'mono-sec-key': `${monoSecretKey}`},
+            headers: { 'mono-sec-key': monoSecretKey},
         }
         )
         if(response.id && response.id != '' && response.expiresAt && response.expiresAt != ''){
             return res.status(200).json({ status: 200, msg: 'Mono Session created successfully',response });
         }
     }catch(error:any){
+        console.log(error);
         return res.status(500).json({ status: 500, error: error.message });
     }
 }
