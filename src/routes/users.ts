@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router()
 import { auth } from '../middleware/auth';
-import { createUser,loginUser, updateUser, getUser, getAllUsers,deleteUser, createBankAccount, updateBankAccount,getAllBankAccounts, deleteBankAccount, createMonoSession, monoLogin } from '../controllers/user';
+import { createUser,loginUser, updateUser, getUser, getAllUsers,deleteUser, createBankAccount, tokenSignin, updateBankAccount,getAllBankAccounts, deleteBankAccount, createMonoSession, monoLogin } from '../controllers/user';
 
 
 router.post('/signup', createUser);
@@ -16,5 +16,5 @@ router.delete('/deletebankaccount/:id', auth, deleteBankAccount);
 router.get('/getallbankaccounts', auth, getAllBankAccounts);
 router.post('/createmonosession',createMonoSession);
 router.post('/monologin',monoLogin);
-
+router.post('/tokensignin',tokenSignin);
 export default router

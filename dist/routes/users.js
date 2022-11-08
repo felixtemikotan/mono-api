@@ -19,4 +19,5 @@ router.delete('/deletebankaccount/:id', auth_1.auth, user_1.deleteBankAccount);
 router.get('/getallbankaccounts', auth_1.auth, user_1.getAllBankAccounts);
 router.post('/createmonosession', user_1.createMonoSession);
 router.post('/monologin', user_1.monoLogin);
+router.post('/tokensignin', user_1.tokenSignin);
 exports.default = router;

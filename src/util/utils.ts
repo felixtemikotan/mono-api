@@ -21,6 +21,11 @@ export const updateUserSchema = Joi.object({
     phonenumber: Joi.string().length(11).pattern(/^[0-9]+$/),
 });
 
+export const otpLoginSchema = Joi.object({
+    otp: Joi.string().required(),
+    sessionId: Joi.string().required(),
+});
+
 export const loginUserSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required()

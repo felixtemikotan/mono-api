@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = exports.generateToken = exports.updateBankAccountSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.updateUserSchema = exports.createUserSchema = void 0;
+exports.options = exports.generateToken = exports.updateBankAccountSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.createUserSchema = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const joi_1 = __importDefault(require("joi"));
@@ -22,6 +22,10 @@ exports.updateUserSchema = joi_1.default.object({
     lastname: joi_1.default.string(),
     email: joi_1.default.string().email(),
     phonenumber: joi_1.default.string().length(11).pattern(/^[0-9]+$/),
+});
+exports.otpLoginSchema = joi_1.default.object({
+    otp: joi_1.default.string().required(),
+    sessionId: joi_1.default.string().required(),
 });
 exports.loginUserSchema = joi_1.default.object({
     email: joi_1.default.string().email().required(),

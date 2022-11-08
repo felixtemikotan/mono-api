@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from "express";
 import { v4 as uuidv4, validate } from "uuid";
 import { UserInstance }  from "../models/users";
 import { BankAccountInstance }  from "../models/bankaccount";
-import {options,createUserSchema, loginUserSchema, createBankAccountSchema,updateUserSchema, updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema } from '../util/utils'
+import {options,createUserSchema, loginUserSchema, createBankAccountSchema,updateUserSchema, updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema, otpLoginSchema } from '../util/utils'
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { generateToken } from "../util/utils";
@@ -251,6 +251,7 @@ export async function monoLogin(req:Request,res:Response,next:NextFunction){
     try{
         const { error } = monoLoginSchema.validate(req.body, options);
         if (error) {
+            console.log("error",error);
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
         const { username, password, sessionId} = req.body;
@@ -259,20 +260,22 @@ export async function monoLogin(req:Request,res:Response,next:NextFunction){
 
         const bankUrl = `${BASE_API_URL}/v1/connect/login`;
         //const response = await axios.post(bankUrl);
-
+console.log(1);
         const response = await axios.post(`${BASE_API_URL}/v1/connect/login`, {
             username: username,
             password: password
         },
         {
-            headers: { 'x-session-id': `${sessionId}`, 'mono-sec-key': `${monoSecretKey}`},
+            headers: { 'mono-sec-key': monoSecretKey, 'x-session-id': sessionId, },
         }
         )
+        console.log(2);
         if(response.status == 200){
 
         return res.status(200).json({ status: 200, msg: 'Mono Login successful',response });
         }
     }catch(error:any){
+        console.log(error);
         return res.status(500).json({ status: 500, error: error.message });
     }
 }
@@ -294,9 +297,37 @@ export async function createMonoSession(req:Request,res:Response,next:NextFuncti
             headers: { 'mono-sec-key': monoSecretKey},
         }
         )
-        if(response.id && response.id != '' && response.expiresAt && response.expiresAt != ''){
-            return res.status(200).json({ status: 200, msg: 'Mono Session created successfully',response });
+        const {data}:any = response;
+        console.log(data);
+        if(data.id && data.id != '' && data.expiresAt && data.expiresAt != ''){
+            return res.status(200).json({ status: 200, msg: 'Mono Session created successfully',data });
         }
+    }catch(error:any){
+        console.log(error);
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+
+export async function tokenSignin(req:Request,res:Response,next:NextFunction){
+    try{
+        const { error } = otpLoginSchema.validate(req.body, options);
+        if (error) {
+            return res.status(400).json({ status: 400, error: error.details[0].message });
+        }
+        const { otp,sessionId } = req.body;
+        const BASE_API_URL = 'https://api.withmono.com'
+        const response:any = await axios.post(`${BASE_API_URL}/v1/connect/commit`, {
+            otp: otp,
+            
+        },
+        {
+            headers: { 'mono-sec-key': monoSecretKey, 'x-session-id': sessionId, },
+        }
+        )
+        const {data}:any = response;
+        console.log(data);
+            return res.status(200).json({ status: 200, msg: 'Mono token signin created successfully',data });
+        
     }catch(error:any){
         console.log(error);
         return res.status(500).json({ status: 500, error: error.message });

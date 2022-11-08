@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createMonoSession = exports.monoLogin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
+exports.tokenSignin = exports.createMonoSession = exports.monoLogin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
 const uuid_1 = require("uuid");
 const users_1 = require("../models/users");
 const bankaccount_1 = require("../models/bankaccount");
@@ -251,23 +251,27 @@ async function monoLogin(req, res, next) {
     try {
         const { error } = utils_1.monoLoginSchema.validate(req.body, utils_1.options);
         if (error) {
+            console.log("error", error);
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
         const { username, password, sessionId } = req.body;
         const BASE_API_URL = 'https://api.withmono.com';
         const bankUrl = `${BASE_API_URL}/v1/connect/login`;
         //const response = await axios.post(bankUrl);
+        console.log(1);
         const response = await axios_1.default.post(`${BASE_API_URL}/v1/connect/login`, {
             username: username,
             password: password
         }, {
-            headers: { 'x-session-id': `${sessionId}`, 'mono-sec-key': `${monoSecretKey}` },
+            headers: { 'mono-sec-key': monoSecretKey, 'x-session-id': sessionId, },
         });
+        console.log(2);
         if (response.status == 200) {
             return res.status(200).json({ status: 200, msg: 'Mono Login successful', response });
         }
     }
     catch (error) {
+        console.log(error);
         return res.status(500).json({ status: 500, error: error.message });
     }
 }
@@ -287,8 +291,10 @@ async function createMonoSession(req, res, next) {
         }, {
             headers: { 'mono-sec-key': monoSecretKey },
         });
-        if (response.id && response.id != '' && response.expiresAt && response.expiresAt != '') {
-            return res.status(200).json({ status: 200, msg: 'Mono Session created successfully', response });
+        const { data } = response;
+        console.log(data);
+        if (data.id && data.id != '' && data.expiresAt && data.expiresAt != '') {
+            return res.status(200).json({ status: 200, msg: 'Mono Session created successfully', data });
         }
     }
     catch (error) {
@@ -297,3 +303,26 @@ async function createMonoSession(req, res, next) {
     }
 }
 exports.createMonoSession = createMonoSession;
+async function tokenSignin(req, res, next) {
+    try {
+        const { error } = utils_1.otpLoginSchema.validate(req.body, utils_1.options);
+        if (error) {
+            return res.status(400).json({ status: 400, error: error.details[0].message });
+        }
+        const { otp, sessionId } = req.body;
+        const BASE_API_URL = 'https://api.withmono.com';
+        const response = await axios_1.default.post(`${BASE_API_URL}/v1/connect/commit`, {
+            otp: otp,
+        }, {
+            headers: { 'mono-sec-key': monoSecretKey, 'x-session-id': sessionId, },
+        });
+        const { data } = response;
+        console.log(data);
+        return res.status(200).json({ status: 200, msg: 'Mono token signin created successfully', data });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.tokenSignin = tokenSignin;
