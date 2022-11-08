@@ -20,7 +20,6 @@ exports.createUserSchema = joi_1.default.object({
 exports.updateUserSchema = joi_1.default.object({
     firstname: joi_1.default.string(),
     lastname: joi_1.default.string(),
-    username: joi_1.default.string(),
     email: joi_1.default.string().email(),
     phonenumber: joi_1.default.string().length(11).pattern(/^[0-9]+$/),
 });

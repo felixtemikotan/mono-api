@@ -7,6 +7,7 @@ import {options,createUserSchema, loginUserSchema, createBankAccountSchema,updat
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { generateToken } from "../util/utils";
+import { getAllBanksNG } from "./flutter";
 const secret = process.env.JWT_SECRET as string
 
 
@@ -63,7 +64,7 @@ export async function loginUser(req: Request, res: Response, next: NextFunction)
         if (!validPassword) {
             return res.status(400).json({ status: 400, error: 'Invalid email or password' });
         }
-        const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY as string);
+        const token = jwt.sign({ id: user.id }, secret as string);
         return res.status(200).json({ status: 200, msg: 'User logged in successfully', token, user });
     } catch (error: any) {
         return res.status(500).json({ status: 500, error: error.message });
@@ -106,7 +107,9 @@ export async function deleteUser(req:Request, res:Response, next:NextFunction){
 export async function getUser(req:Request, res:Response, next:NextFunction){
     try {
         const { id } = req.params;
-        const user = await UserInstance.findOne({ where: { id } });
+        const user = await UserInstance.findOne({ where: { id },
+            include: [{ model: BankAccountInstance, as: "bankaccounts" }], 
+        });
         if (!user) {
             return res.status(404).json({ status: 404, error: 'User not found' });
         }
@@ -126,26 +129,36 @@ export async function getAllUsers(req:Request, res:Response, next:NextFunction){
 }
 
 
-export async function createBankAccount(req: Request, res: Response, next: NextFunction) {
+export async function createBankAccount(req: Request|any, res: Response, next: NextFunction) {
     try {
+        const userId=req.user.id;
         const { error } = createBankAccountSchema.validate(req.body, options);
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { userId,accountnumber, accountname, bankname, bankcode, accounttype } = req.body;
+        const { accountnumber, accountname, bankname, bankcode, accounttype } = req.body;
         const duplicateAccountnumber = await BankAccountInstance.findOne({ where: { accountnumber } });
         if (duplicateAccountnumber) {
             return res.status(409).json({ status: 409, error: 'Accountnumber already exist' });
         }
         const id = uuidv4();
+
+        let {data} = await getAllBanksNG()
+
+        const bankCode = data.filter((item: { name: string }) => item.name.toLowerCase() == bankname.toLowerCase())
+        
+        if (bankCode.length == 0) {
+            return res.status(404).json({ status: 404, msg: 'Bank not found', data });
+        }
+        let code = bankCode[0].code
         const bankaccount = await BankAccountInstance.create({
-            id,
-            userId,
-            accountnumber,
-            accountname,
-            bankname,
-            bankcode,
-            accounttype,
+            id:id,
+            userId:userId,
+            accountnumber:accountnumber,
+            accountname:accountname,
+            bankname:bankname,
+            bankcode:code,
+            accounttype:accounttype,
         });
         return res.status(201).json({ status: 201, msg: 'Bank Account created successfully', bankaccount });
     } catch (error: any) {
@@ -165,7 +178,13 @@ export async function updateBankAccount(req:Request, res:Response, next:NextFunc
         if (!bankaccount) {
             return res.status(404).json({ status: 404, error: 'Bank Account not found' });
         }
-        const record=await BankAccountInstance.update({ accountnumber, accountname, bankname, bankcode, accounttype }, { where: { id } });
+        let {data} = await getAllBanksNG()
+
+        const bankCode = data.filter((item: { name: string }) => item.name.toLowerCase() == bankname.toLowerCase())
+        let code = bankCode[0].code
+
+        const record=await BankAccountInstance.update({ accountnumber:accountnumber, accountname:accountname, 
+            bankname:bankname, bankcode:code, accounttype:accounttype }, { where: { id } });
         return res.status(200).json({ status: 200, msg: 'Bank Account updated successfully',record });
     } catch (error: any) {
         return res.status(500).json({ status: 500, error: error.message });

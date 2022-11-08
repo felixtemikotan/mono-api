@@ -17,7 +17,6 @@ export const createUserSchema = Joi.object({
 export const updateUserSchema = Joi.object({
     firstname: Joi.string(),
     lastname: Joi.string(),
-    username: Joi.string(),
     email: Joi.string().email(),
     phonenumber: Joi.string().length(11).pattern(/^[0-9]+$/),
 })

@@ -57,5 +57,5 @@ UserInstance.init(
   }
 );
 
- UserInstance.hasMany(BankAccountInstance, { foreignKey: "userId", as: "groups" });
+ UserInstance.hasMany(BankAccountInstance, { foreignKey: "userId", as: "bankaccounts" });
  BankAccountInstance.belongsTo(UserInstance, { foreignKey: "userId", as: "user" });

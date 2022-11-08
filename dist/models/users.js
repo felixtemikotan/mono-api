@@ -46,5 +46,5 @@ UserInstance.init({
     sequelize: database_config_1.default,
     tableName: 'userTable'
 });
-UserInstance.hasMany(bankaccount_1.BankAccountInstance, { foreignKey: "userId", as: "groups" });
+UserInstance.hasMany(bankaccount_1.BankAccountInstance, { foreignKey: "userId", as: "bankaccounts" });
 bankaccount_1.BankAccountInstance.belongsTo(UserInstance, { foreignKey: "userId", as: "user" });

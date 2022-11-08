@@ -10,6 +10,7 @@ const bankaccount_1 = require("../models/bankaccount");
 const utils_1 = require("../util/utils");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const flutter_1 = require("./flutter");
 const secret = process.env.JWT_SECRET;
 async function createUser(req, res, next) {
     try {
@@ -64,7 +65,7 @@ async function loginUser(req, res, next) {
         if (!validPassword) {
             return res.status(400).json({ status: 400, error: 'Invalid email or password' });
         }
-        const token = jsonwebtoken_1.default.sign({ id: user.id }, process.env.SECRET_KEY);
+        const token = jsonwebtoken_1.default.sign({ id: user.id }, secret);
         return res.status(200).json({ status: 200, msg: 'User logged in successfully', token, user });
     }
     catch (error) {
@@ -110,7 +111,9 @@ exports.deleteUser = deleteUser;
 async function getUser(req, res, next) {
     try {
         const { id } = req.params;
-        const user = await users_1.UserInstance.findOne({ where: { id } });
+        const user = await users_1.UserInstance.findOne({ where: { id },
+            include: [{ model: bankaccount_1.BankAccountInstance, as: "bankaccounts" }],
+        });
         if (!user) {
             return res.status(404).json({ status: 404, error: 'User not found' });
         }
@@ -133,24 +136,31 @@ async function getAllUsers(req, res, next) {
 exports.getAllUsers = getAllUsers;
 async function createBankAccount(req, res, next) {
     try {
+        const userId = req.user.id;
         const { error } = utils_1.createBankAccountSchema.validate(req.body, utils_1.options);
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { userId, accountnumber, accountname, bankname, bankcode, accounttype } = req.body;
+        const { accountnumber, accountname, bankname, bankcode, accounttype } = req.body;
         const duplicateAccountnumber = await bankaccount_1.BankAccountInstance.findOne({ where: { accountnumber } });
         if (duplicateAccountnumber) {
             return res.status(409).json({ status: 409, error: 'Accountnumber already exist' });
         }
         const id = (0, uuid_1.v4)();
+        let { data } = await (0, flutter_1.getAllBanksNG)();
+        const bankCode = data.filter((item) => item.name.toLowerCase() == bankname.toLowerCase());
+        if (bankCode.length == 0) {
+            return res.status(404).json({ status: 404, msg: 'Bank not found', data });
+        }
+        let code = bankCode[0].code;
         const bankaccount = await bankaccount_1.BankAccountInstance.create({
-            id,
-            userId,
-            accountnumber,
-            accountname,
-            bankname,
-            bankcode,
-            accounttype,
+            id: id,
+            userId: userId,
+            accountnumber: accountnumber,
+            accountname: accountname,
+            bankname: bankname,
+            bankcode: code,
+            accounttype: accounttype,
         });
         return res.status(201).json({ status: 201, msg: 'Bank Account created successfully', bankaccount });
     }
@@ -171,7 +181,11 @@ async function updateBankAccount(req, res, next) {
         if (!bankaccount) {
             return res.status(404).json({ status: 404, error: 'Bank Account not found' });
         }
-        const record = await bankaccount_1.BankAccountInstance.update({ accountnumber, accountname, bankname, bankcode, accounttype }, { where: { id } });
+        let { data } = await (0, flutter_1.getAllBanksNG)();
+        const bankCode = data.filter((item) => item.name.toLowerCase() == bankname.toLowerCase());
+        let code = bankCode[0].code;
+        const record = await bankaccount_1.BankAccountInstance.update({ accountnumber: accountnumber, accountname: accountname,
+            bankname: bankname, bankcode: code, accounttype: accounttype }, { where: { id } });
         return res.status(200).json({ status: 200, msg: 'Bank Account updated successfully', record });
     }
     catch (error) {
