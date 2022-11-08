@@ -17,4 +17,6 @@ router.post('/createbankaccount', auth_1.auth, user_1.createBankAccount);
 router.patch('/updatebankaccount/:id', auth_1.auth, user_1.updateBankAccount);
 router.delete('/deletebankaccount/:id', auth_1.auth, user_1.deleteBankAccount);
 router.get('/getallbankaccounts', auth_1.auth, user_1.getAllBankAccounts);
+router.post('/createmonosession', user_1.createMonoSession);
+router.post('/monologin', user_1.monoLogin);
 exports.default = router;
