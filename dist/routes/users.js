@@ -5,5 +5,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const router = express_1.default.Router();
-//import { ateLoanRepayment, updateMessage, updateSavings, updateUser } from '../controller/user';
+const auth_1 = require("../middleware/auth");
+const user_1 = require("../controllers/user");
+router.post('/signup', user_1.createUser);
+router.post('/login', user_1.loginUser);
+router.put('/update/:id', auth_1.auth, user_1.updateUser);
+router.delete('/delete/:id', auth_1.auth, user_1.deleteUser);
+router.get('/get/:id', auth_1.auth, user_1.getUser);
+router.get('/getall', auth_1.auth, user_1.getAllUsers);
+router.post('/createbankaccount', auth_1.auth, user_1.createBankAccount);
+router.put('/updatebankaccount/:id', auth_1.auth, user_1.updateBankAccount);
+router.delete('/deletebankaccount/:id', auth_1.auth, user_1.deleteBankAccount);
+router.get('/getallbankaccounts', auth_1.auth, user_1.getAllBankAccounts);
 exports.default = router;

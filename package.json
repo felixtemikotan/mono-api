@@ -16,6 +16,8 @@
         "@types/joi": "^17.2.3",
         "@types/pg": "^8.6.5",
         "@types/sequelize": "^4.28.14",
+        "@types/uuid": "^8.3.4",
+        "bcryptjs": "^2.4.3",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
         "dotenv": "^16.0.3",
@@ -26,9 +28,11 @@
         "jsonwebtoken": "^8.5.1",
         "morgan": "^1.10.0",
         "pg": "^8.8.0",
-        "sequelize": "^6.25.5"
+        "sequelize": "^6.25.5",
+        "uuid": "^9.0.0"
     },
     "devDependencies": {
+        "@types/bcryptjs": "^2.4.2",
         "@types/cookie-parser": "^1.4.3",
         "@types/jsonwebtoken": "^8.5.9",
         "@types/morgan": "^1.9.3"
