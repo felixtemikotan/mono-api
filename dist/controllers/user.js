@@ -10,11 +10,13 @@ const bankaccount_1 = require("../models/bankaccount");
 const utils_1 = require("../util/utils");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const request_1 = __importDefault(require("request"));
 const monoapi_1 = require("./monoapi");
 const axios_1 = __importDefault(require("axios"));
 const secret = process.env.JWT_SECRET;
 const monoSecretKey = process.env.MONO_SECRET_KEY;
 const monoAppId = process.env.MONO_APP_ID;
+const monoBaseUrl = process.env.BASE_API_URL;
 async function createUser(req, res, next) {
     try {
         const { error } = utils_1.createUserSchema.validate(req.body, utils_1.options);
@@ -251,22 +253,28 @@ async function monoLogin(req, res, next) {
     try {
         const { error } = utils_1.monoLoginSchema.validate(req.body, utils_1.options);
         if (error) {
-            console.log("error", error);
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
         const { username, password, sessionId } = req.body;
-        const BASE_API_URL = 'https://api.withmono.com';
-        const bankUrl = `${BASE_API_URL}/v1/connect/login`;
-        //const response = await axios.post(bankUrl);
-        const response = await axios_1.default.post(`${BASE_API_URL}/v1/connect/login`, {
-            username: username,
-            password: password
-        }, {
-            headers: { 'mono-sec-key': monoSecretKey, 'x-session-id': sessionId, 'Content-Type': 'application/json' },
+        const monoUrl = `${monoBaseUrl}/v1/connect/login`;
+        const option = {
+            'method': 'POST',
+            'url': monoUrl,
+            'headers': {
+                Accept: 'application/json',
+                'mono-sec-key': monoSecretKey,
+                'x-session-id': sessionId,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: username, password: password })
+        };
+        (0, request_1.default)(option, function (error, response) {
+            if (error) {
+                return res.status(400).json({ status: 400, error: error });
+            }
+            const result = JSON.parse(response.body);
+            return res.status(200).json({ status: 200, msg: 'Mono Login successful', result });
         });
-        if (response.status == 200) {
-            return res.status(200).json({ status: 200, msg: 'Mono Login successful', response });
-        }
     }
     catch (error) {
         console.log(error);
@@ -308,11 +316,17 @@ async function tokenSignin(req, res, next) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
         const { otp, sessionId } = req.body;
+        const headers = {
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+            'x-session-id': sessionId,
+            'mono-sec-key': monoSecretKey,
+        };
         const BASE_API_URL = 'https://api.withmono.com';
         const response = await axios_1.default.post(`${BASE_API_URL}/v1/connect/commit`, {
             otp: otp,
         }, {
-            headers: { "mono-sec-key": monoSecretKey, "x-session-id": sessionId, },
+            headers: headers
         });
         const { data } = response;
         console.log(data);
@@ -320,7 +334,7 @@ async function tokenSignin(req, res, next) {
     }
     catch (error) {
         console.log(error);
-        return res.status(500).json({ status: 500, error: error.message });
+        return res.status(500).json({ status: 500, error: error });
     }
 }
 exports.tokenSignin = tokenSignin;

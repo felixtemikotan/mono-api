@@ -6,12 +6,14 @@ import { BankAccountInstance }  from "../models/bankaccount";
 import {options,createUserSchema, loginUserSchema, createBankAccountSchema,updateUserSchema, updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema, otpLoginSchema } from '../util/utils'
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import request from 'request';
 import { generateToken } from "../util/utils";
 import { getAllBanksNG } from "./monoapi";
 import axios from 'axios';
 const secret = process.env.JWT_SECRET as string;
 const monoSecretKey = process.env.MONO_SECRET_KEY as string;
 const monoAppId = process.env.MONO_APP_ID as string;
+const monoBaseUrl = process.env.BASE_API_URL as string; 
 
 
 export async function createUser(req: Request, res: Response, next: NextFunction) {
@@ -249,31 +251,36 @@ export async function getAllBankAccounts(req:Request, res:Response, next:NextFun
 
 export async function monoLogin(req:Request,res:Response,next:NextFunction){
     try{
+        
         const { error } = monoLoginSchema.validate(req.body, options);
         if (error) {
-            console.log("error",error);
+            
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
         const { username, password, sessionId} = req.body;
-         const BASE_API_URL = 'https://api.withmono.com'
-
-
-        const bankUrl = `${BASE_API_URL}/v1/connect/login`;
-        //const response = await axios.post(bankUrl);
-
-        const response = await axios.post(`${BASE_API_URL}/v1/connect/login`, {
-            username: username,
-            password: password
-        },
-        {
-            headers: { 'mono-sec-key': monoSecretKey as string,  'x-session-id': sessionId as string, 'Content-Type': 'application/json'  },
-        },
-        )
         
-        if(response.status == 200){
+        const monoUrl = `${monoBaseUrl}/v1/connect/login`;
+        const option = {
+            'method': 'POST',
+            'url':monoUrl,
+            'headers': {
+    
+                Accept: 'application/json',
+                'mono-sec-key':monoSecretKey,
+                'x-session-id': sessionId,
+                'Content-Type': 'application/json'  
+            },
+            body: JSON.stringify({username: username, password: password})
+          };
+          request(option, function (error, response) { 
+            if (error) {
+                return res.status(400).json({ status: 400, error: error});  
+            }
+           const result = JSON.parse(response.body);
+              return res.status(200).json({ status: 200, msg: 'Mono Login successful',result });
+          });
+       
 
-        return res.status(200).json({ status: 200, msg: 'Mono Login successful',response });
-        }
     }catch(error:any){
         console.log(error);
         return res.status(500).json({ status: 500, error: error.message });
@@ -315,21 +322,26 @@ export async function tokenSignin(req:Request,res:Response,next:NextFunction){
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
         const { otp,sessionId } = req.body;
+        const headers={
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+            'x-session-id': sessionId,
+            'mono-sec-key': monoSecretKey,
+        }
         const BASE_API_URL = 'https://api.withmono.com'
         const response:any = await axios.post(`${BASE_API_URL}/v1/connect/commit`, {
             otp: otp,
             
         },
         {
-            headers: { "mono-sec-key": monoSecretKey, "x-session-id": sessionId, },
-        }
-        )
+            headers: headers
+        })
         const {data}:any = response;
         console.log(data);
             return res.status(200).json({ status: 200, msg: 'Mono token signin created successfully',data });
         
     }catch(error:any){
         console.log(error);
-        return res.status(500).json({ status: 500, error: error.message });
+        return res.status(500).json({ status: 500, error: error });
     }
 }

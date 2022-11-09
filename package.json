@@ -37,6 +37,7 @@
         "@types/bcryptjs": "^2.4.2",
         "@types/cookie-parser": "^1.4.3",
         "@types/jsonwebtoken": "^8.5.9",
-        "@types/morgan": "^1.9.3"
+        "@types/morgan": "^1.9.3",
+        "@types/request": "^2.48.8"
     }
 }
