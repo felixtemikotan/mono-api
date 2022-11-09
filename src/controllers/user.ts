@@ -3,7 +3,8 @@ import express, { Request, Response, NextFunction } from "express";
 import { v4 as uuidv4, validate } from "uuid";
 import { UserInstance }  from "../models/users";
 import { BankAccountInstance }  from "../models/bankaccount";
-import {options,createUserSchema, loginUserSchema, createBankAccountSchema,updateUserSchema, updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema, otpLoginSchema } from '../util/utils'
+import {options,createUserSchema, loginUserSchema, createBankAccountSchema,updateUserSchema,monoSessionLoginSchema,
+    updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema, otpLoginSchema } from '../util/utils'
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import request from 'request';
@@ -141,18 +142,16 @@ export async function createBankAccount(req: Request|any, res: Response, next: N
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { accountnumber, accountname, bankname, bankcode, accounttype,banktransactiontype } = req.body;
+        const { accountnumber, accountname, bankname, bankcode, accounttype,banktransactiontype,username,password } = req.body;
         const duplicateAccountnumber = await BankAccountInstance.findOne({ where: { accountnumber } });
         if (duplicateAccountnumber) {
             return res.status(409).json({ status: 409, error: 'Accountnumber already exist' });
         }
         const id = uuidv4();
 
-        const tokenizedAccountnumber=jwt.sign({ accountnumber:accountnumber }, secret as string);
-       
-        let decryptedAccountNumber = jwt.verify(tokenizedAccountnumber, secret);
+        const tokenizedUsername=jwt.sign({ username:username }, secret as string);
+        const tokenizedPassword=jwt.sign({ password:password }, secret as string);
         
-
         const {data}:any = await getAllBanksNG();
         const banksData=data.map((bank:any)=>{
             let allBanksData:any={};
@@ -176,12 +175,14 @@ export async function createBankAccount(req: Request|any, res: Response, next: N
         const bankaccount = await BankAccountInstance.create({
             id:id,
             userId:userId,
-            accountnumber:tokenizedAccountnumber,
+            accountnumber:accountnumber,
             accountname:accountname,
             bankname:bankname,
             bankcode:code,
             accounttype:accounttype,
             banktransactiontype:banktransactiontype,
+            username:tokenizedUsername,
+            password:tokenizedPassword,
         });
         return res.status(201).json({ status: 201, msg: 'Bank Account created successfully', bankaccount });
     } catch (error: any) {
@@ -343,5 +344,60 @@ export async function tokenSignin(req:Request,res:Response,next:NextFunction){
     }catch(error:any){
         console.log(error);
         return res.status(500).json({ status: 500, error: error });
+    }
+}
+
+export async function monoSessionLogin(req:Request,res:Response,next:NextFunction){
+    try{
+        const { error } = monoSessionLoginSchema.validate(req.body, options);
+        if (error) {
+            return res.status(400).json({ status: 400, error: error.details[0].message });
+        }
+        const { institution, auth_method, username, password } = req.body;
+
+        //const BASE_API_URL = 'https://api.withmono.com'
+        const response:any = await axios.post(`${monoBaseUrl}/v1/connect/session`, {
+            app: monoAppId,
+            institution: institution,
+            auth_method: auth_method
+        },
+        {
+            headers: { "mono-sec-key": monoSecretKey},
+        }
+        )
+       
+        if(response.data.status !== 'successful'){
+            return res.status(400).json({ status: 400, msg: 'An error has occured while creating mono session',response });
+        }
+        const {data}:any = response;
+        console.log(data);
+        const sessionId = data.id;
+
+        const monoUrl = `${monoBaseUrl}/v1/connect/login`;
+        const option = {
+            'method': 'POST',
+            'url':monoUrl,
+            'headers': {
+    
+                Accept: 'application/json',
+                'mono-sec-key':monoSecretKey,
+                'x-session-id': sessionId,
+                'Content-Type': 'application/json'  
+            },
+            body: JSON.stringify({username: username, password: password})
+          };
+          request(option, function (error, response) { 
+            if (error) {
+                return res.status(400).json({ status: 400, error: error});  
+            }
+           const result = JSON.parse(response.body);
+              return res.status(200).json({ status: 200, msg: 'Mono Login successful',result });
+          });
+       
+        
+
+    }catch(error:any){
+        console.log(error);
+        return res.status(500).json({ status: 500, error: error.message });
     }
 }

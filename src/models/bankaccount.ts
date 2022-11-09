@@ -10,6 +10,8 @@ interface BankAccountAtrribute{
     bankcode:string;
     accounttype:string;
     banktransactiontype:string;
+    username:string;
+    password:string;
 }
 
 export class BankAccountInstance extends Model<BankAccountAtrribute>{}
@@ -46,6 +48,14 @@ BankAccountInstance.init(
             allowNull:false
         },
         banktransactiontype:{
+            type:DataTypes.STRING,
+            allowNull:false
+        },
+        username:{
+            type:DataTypes.STRING,
+            allowNull:false
+        },
+        password:{
             type:DataTypes.STRING,
             allowNull:false
         }

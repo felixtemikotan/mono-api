@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = exports.generateToken = exports.updateBankAccountSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.createUserSchema = void 0;
+exports.options = exports.generateToken = exports.monoSessionLoginSchema = exports.updateBankAccountSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.createUserSchema = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const joi_1 = __importDefault(require("joi"));
@@ -45,14 +45,23 @@ exports.createBankAccountSchema = joi_1.default.object({
     accountname: joi_1.default.string().required(),
     bankname: joi_1.default.string().required(),
     accounttype: joi_1.default.string().required(),
-    banktransactiontype: joi_1.default.string().required()
-});
+    banktransactiontype: joi_1.default.string().required(),
+    username: joi_1.default.string().required(),
+    password: joi_1.default.string().required(),
+    confirmPassword: joi_1.default.ref('password')
+}).with('password', 'confirmPassword');
 exports.updateBankAccountSchema = joi_1.default.object({
     accountnumber: joi_1.default.string().length(10).pattern(/^[0-9]+$/),
     accountname: joi_1.default.string(),
     bankname: joi_1.default.string(),
     accounttype: joi_1.default.string(),
     banktransactiontype: joi_1.default.string()
+});
+exports.monoSessionLoginSchema = joi_1.default.object({
+    institution: joi_1.default.string().required(),
+    auth_method: joi_1.default.string().required(),
+    username: joi_1.default.string().required(),
+    password: joi_1.default.string().required()
 });
 const generateToken = (user) => {
     const pass = process.env.JWT_SECRET;

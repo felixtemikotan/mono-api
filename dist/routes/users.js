@@ -20,4 +20,5 @@ router.get('/getallbankaccounts', auth_1.auth, user_1.getAllBankAccounts);
 router.post('/createmonosession', user_1.createMonoSession);
 router.post('/monologin', user_1.monoLogin);
 router.post('/tokensignin', user_1.tokenSignin);
+router.post('/login-to-mono', user_1.monoSessionLogin);
 exports.default = router;
