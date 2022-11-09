@@ -48,6 +48,7 @@ export const createBankAccountSchema = Joi.object({
     bankname: Joi.string().required(),
     accounttype: Joi.string().required(),
     banktransactiontype: Joi.string().required(),
+    servicetype: Joi.string().required(),
     username: Joi.string().required(),
     password: Joi.string().required(),
     confirmPassword: Joi.ref('password')
@@ -58,14 +59,15 @@ export const updateBankAccountSchema = Joi.object({
     accountname: Joi.string(),
     bankname: Joi.string(),
     accounttype: Joi.string(),
-    banktransactiontype: Joi.string()
-});
+    banktransactiontype: Joi.string(),
+    servicetype: Joi.string(),
+    username: Joi.string(),
+    password: Joi.string(),
+    confirmPassword: Joi.ref('password')
+}).with('password', 'confirmPassword');
 
 export const monoSessionLoginSchema = Joi.object({
-    institution: Joi.string().required(),
-    auth_method: Joi.string().required(),
-   username: Joi.string().required(),
-    password: Joi.string().required()
+    institution: Joi.string().required()
 });
 
 export const generateToken=(user:{[key:string]:unknown}):unknown=>{

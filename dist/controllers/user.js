@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.monoSessionLogin = exports.tokenSignin = exports.createMonoSession = exports.monoLogin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
+exports.getMonoAccountDetails = exports.exchangeToken = exports.getAllMonoBanks = exports.monoSessionLogin = exports.tokenSignin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
 const uuid_1 = require("uuid");
 const users_1 = require("../models/users");
 const bankaccount_1 = require("../models/bankaccount");
@@ -13,6 +13,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const request_1 = __importDefault(require("request"));
 const monoapi_1 = require("./monoapi");
 const axios_1 = __importDefault(require("axios"));
+const exchangeToken_1 = require("../models/exchangeToken");
 const secret = process.env.JWT_SECRET;
 const monoSecretKey = process.env.MONO_SECRET_KEY;
 const monoAppId = process.env.MONO_APP_ID;
@@ -48,7 +49,19 @@ async function createUser(req, res, next) {
             phonenumber,
             password: hashedPassword,
         });
-        return res.status(201).json({ status: 201, msg: 'User created successfully', user });
+        if (!user) {
+            return res.status(500).json({ status: 500, error: 'Internal server error' });
+        }
+        const exchangeTokenId = (0, uuid_1.v4)();
+        const exchangeToken = await exchangeToken_1.ExchangeTokenInstance.create({
+            id: exchangeTokenId,
+            userId: id,
+            logintoken: '1234',
+            exchangetoken: '1234',
+        });
+        const tokenData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: id } });
+        console.log("Token Data: ", tokenData);
+        return res.status(201).json({ status: 201, msg: 'User created successfully', user, tokenData });
     }
     catch (error) {
         return res.status(500).json({ status: 500, error: error.message });
@@ -70,6 +83,7 @@ async function loginUser(req, res, next) {
         if (!validPassword) {
             return res.status(400).json({ status: 400, error: 'Invalid email or password' });
         }
+        const { id } = user;
         const token = jsonwebtoken_1.default.sign({ id: user.id }, secret);
         return res.status(200).json({ status: 200, msg: 'User logged in successfully', token, user });
     }
@@ -146,7 +160,7 @@ async function createBankAccount(req, res, next) {
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { accountnumber, accountname, bankname, bankcode, accounttype, banktransactiontype, username, password } = req.body;
+        const { accountnumber, accountname, bankname, bankcode, accounttype, banktransactiontype, servicetype, username, password } = req.body;
         const duplicateAccountnumber = await bankaccount_1.BankAccountInstance.findOne({ where: { accountnumber } });
         if (duplicateAccountnumber) {
             return res.status(409).json({ status: 409, error: 'Accountnumber already exist' });
@@ -180,6 +194,7 @@ async function createBankAccount(req, res, next) {
             bankcode: code,
             accounttype: accounttype,
             banktransactiontype: banktransactiontype,
+            servicetype: servicetype,
             username: tokenizedUsername,
             password: tokenizedPassword,
         });
@@ -197,7 +212,9 @@ async function updateBankAccount(req, res, next) {
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { accountnumber, accountname, bankname, accounttype, banktransactiontype } = req.body;
+        const { accountnumber, accountname, bankname, accounttype, banktransactiontype, servicetype, username, password } = req.body;
+        const tokenizedUsername = jsonwebtoken_1.default.sign({ username: username }, secret);
+        const tokenizedPassword = jsonwebtoken_1.default.sign({ password: password }, secret);
         const bankaccount = await bankaccount_1.BankAccountInstance.findOne({ where: { id } });
         if (!bankaccount) {
             return res.status(404).json({ status: 404, error: 'Bank Account not found' });
@@ -211,13 +228,17 @@ async function updateBankAccount(req, res, next) {
             allBanksData.type = bank.type;
             return allBanksData;
         });
-        const bankCode = banksData.filter((item) => item.bankname.toLowerCase() == bankname.toLowerCase());
+        const bankCode = banksData.filter((item) => {
+            if (item.bankname.toLowerCase() == bankname.toLowerCase() && item.type.toLowerCase() == banktransactiontype.toLowerCase())
+                return item;
+        });
         if (bankCode.length == 0) {
             return res.status(404).json({ status: 404, msg: 'Bank not found', banksData });
         }
         let code = bankCode[0].bankId;
-        const record = await bankaccount_1.BankAccountInstance.update({ accountnumber: tokenizedAccountnumber, accountname: accountname,
-            bankname: bankname, bankcode: code, accounttype: accounttype, banktransactiontype: banktransactiontype }, { where: { id } });
+        const record = await bankaccount_1.BankAccountInstance.update({ accountnumber: accountnumber, accountname: accountname,
+            bankname: bankname, bankcode: code, accounttype: accounttype, banktransactiontype: banktransactiontype,
+            servicetype: servicetype, username: tokenizedUsername, password: tokenizedPassword }, { where: { id } });
         return res.status(200).json({ status: 200, msg: 'Bank Account updated successfully', record });
     }
     catch (error) {
@@ -251,66 +272,6 @@ async function getAllBankAccounts(req, res, next) {
     }
 }
 exports.getAllBankAccounts = getAllBankAccounts;
-async function monoLogin(req, res, next) {
-    try {
-        const { error } = utils_1.monoLoginSchema.validate(req.body, utils_1.options);
-        if (error) {
-            return res.status(400).json({ status: 400, error: error.details[0].message });
-        }
-        const { username, password, sessionId } = req.body;
-        const monoUrl = `${monoBaseUrl}/v1/connect/login`;
-        const option = {
-            'method': 'POST',
-            'url': monoUrl,
-            'headers': {
-                Accept: 'application/json',
-                'mono-sec-key': monoSecretKey,
-                'x-session-id': sessionId,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username: username, password: password })
-        };
-        (0, request_1.default)(option, function (error, response) {
-            if (error) {
-                return res.status(400).json({ status: 400, error: error });
-            }
-            const result = JSON.parse(response.body);
-            return res.status(200).json({ status: 200, msg: 'Mono Login successful', result });
-        });
-    }
-    catch (error) {
-        console.log(error);
-        return res.status(500).json({ status: 500, error: error.message });
-    }
-}
-exports.monoLogin = monoLogin;
-async function createMonoSession(req, res, next) {
-    try {
-        const { error } = utils_1.createMonoSessionSchema.validate(req.body, utils_1.options);
-        if (error) {
-            return res.status(400).json({ status: 400, error: error.details[0].message });
-        }
-        const { institution, auth_method } = req.body;
-        const BASE_API_URL = 'https://api.withmono.com';
-        const response = await axios_1.default.post(`${BASE_API_URL}/v1/connect/session`, {
-            app: monoAppId,
-            institution: institution,
-            auth_method: auth_method
-        }, {
-            headers: { "mono-sec-key": monoSecretKey },
-        });
-        const { data } = response;
-        console.log(data);
-        if (data.id && data.id != '' && data.expiresAt && data.expiresAt != '') {
-            return res.status(200).json({ status: 200, msg: 'Mono Session created successfully', data });
-        }
-    }
-    catch (error) {
-        console.log(error);
-        return res.status(500).json({ status: 500, error: error.message });
-    }
-}
-exports.createMonoSession = createMonoSession;
 async function tokenSignin(req, res, next) {
     try {
         const { error } = utils_1.otpLoginSchema.validate(req.body, utils_1.options);
@@ -346,7 +307,17 @@ async function monoSessionLogin(req, res, next) {
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { institution, auth_method, username, password } = req.body;
+        const { institution } = req.body;
+        const userId = req.user.id;
+        const userBankInfo = await bankaccount_1.BankAccountInstance.findOne({ where: { userId: userId, bankcode: institution } });
+        if (!userBankInfo) {
+            return res.status(404).json({ status: 404, error: 'Bank Account not found' });
+        }
+        const { servicetype, username, password } = userBankInfo;
+        const detokenizedUsername = jsonwebtoken_1.default.verify(username, secret);
+        const detokenizedPassword = jsonwebtoken_1.default.verify(password, secret);
+        const auth_method = servicetype;
+        console.log(auth_method);
         //const BASE_API_URL = 'https://api.withmono.com'
         const response = await axios_1.default.post(`${monoBaseUrl}/v1/connect/session`, {
             app: monoAppId,
@@ -359,8 +330,8 @@ async function monoSessionLogin(req, res, next) {
             return res.status(400).json({ status: 400, msg: 'An error has occured while creating mono session', response });
         }
         const { data } = response;
-        console.log(data);
         const sessionId = data.id;
+        console.log(sessionId);
         const monoUrl = `${monoBaseUrl}/v1/connect/login`;
         const option = {
             'method': 'POST',
@@ -371,19 +342,98 @@ async function monoSessionLogin(req, res, next) {
                 'x-session-id': sessionId,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username: username, password: password })
+            body: JSON.stringify({ username: detokenizedUsername.username, password: detokenizedPassword.password })
         };
-        (0, request_1.default)(option, function (error, response) {
+        (0, request_1.default)(option, async function (error, response) {
             if (error) {
                 return res.status(400).json({ status: 400, error: error });
             }
             const result = JSON.parse(response.body);
-            return res.status(200).json({ status: 200, msg: 'Mono Login successful', result });
+            console.log(result.data);
+            const record = await exchangeToken_1.ExchangeTokenInstance.update({ logintoken: result.data.code }, { where: { userId: userId } });
+            const recordOut = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+            return res.status(200).json({ status: 200, msg: 'Mono Login successful', result, recordOut });
         });
     }
     catch (error) {
-        console.log(error);
         return res.status(500).json({ status: 500, error: error.message });
     }
 }
 exports.monoSessionLogin = monoSessionLogin;
+async function getAllMonoBanks(req, res, next) {
+    try {
+        const request = require('request');
+        const options = {
+            method: 'GET',
+            url: 'https://api.withmono.com/v1/institutions?scope=payments&country=ng',
+            headers: { accept: 'application/json' }
+        };
+        request(options, function (error, response, body) {
+            const resultOut = JSON.parse(response.body);
+            const formattedOutput = resultOut.map((item) => {
+                return {
+                    bankId: item._id,
+                    bankName: item.name,
+                    serviceYype: item.type,
+                };
+            });
+            const numberOfBanks = formattedOutput.length;
+            console.log(formattedOutput);
+            return res.status(200).json({ status: 200, msg: 'Mono Banks found successfully', numberOfBanks: numberOfBanks, formattedOutput });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getAllMonoBanks = getAllMonoBanks;
+async function exchangeToken(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const options = {
+            method: 'POST',
+            url: 'https://api.withmono.com/account/auth',
+            headers: {
+                accept: 'application/json',
+                'mono-sec-key': monoSecretKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ code: 'code_tJWVY6S6JEkslQBwtaWo' })
+        };
+        (0, request_1.default)(options, async function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                const record = await exchangeToken_1.ExchangeTokenInstance.update({ exchangetoken: resultOut.id }, { where: { userId: userId } });
+                const recordOut = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+                return res.status(200).json({ status: 200, msg: 'Mono Banks found successfully', resultOut, recordOut });
+            }
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.exchangeToken = exchangeToken;
+async function getMonoAccountDetails(req, res, next) {
+    try {
+        const request = require('request');
+        const options = {
+            method: 'GET',
+            url: 'https://api.withmono.com/accounts/636bccb8821b514843ab899c',
+            headers: { accept: 'application/json', 'mono-sec-key': 'live_sk_uueEcsoBUSfcSFekEkv6' }
+        };
+        request(options, function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                return res.status(200).json({ status: 200, msg: 'Mono Banks found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting mono account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getMonoAccountDetails = getMonoAccountDetails;

@@ -46,6 +46,7 @@ exports.createBankAccountSchema = joi_1.default.object({
     bankname: joi_1.default.string().required(),
     accounttype: joi_1.default.string().required(),
     banktransactiontype: joi_1.default.string().required(),
+    servicetype: joi_1.default.string().required(),
     username: joi_1.default.string().required(),
     password: joi_1.default.string().required(),
     confirmPassword: joi_1.default.ref('password')
@@ -55,13 +56,14 @@ exports.updateBankAccountSchema = joi_1.default.object({
     accountname: joi_1.default.string(),
     bankname: joi_1.default.string(),
     accounttype: joi_1.default.string(),
-    banktransactiontype: joi_1.default.string()
-});
+    banktransactiontype: joi_1.default.string(),
+    servicetype: joi_1.default.string(),
+    username: joi_1.default.string(),
+    password: joi_1.default.string(),
+    confirmPassword: joi_1.default.ref('password')
+}).with('password', 'confirmPassword');
 exports.monoSessionLoginSchema = joi_1.default.object({
-    institution: joi_1.default.string().required(),
-    auth_method: joi_1.default.string().required(),
-    username: joi_1.default.string().required(),
-    password: joi_1.default.string().required()
+    institution: joi_1.default.string().required()
 });
 const generateToken = (user) => {
     const pass = process.env.JWT_SECRET;

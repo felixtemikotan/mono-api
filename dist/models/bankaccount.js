@@ -43,6 +43,10 @@ BankAccountInstance.init({
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
+    servicetype: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false
+    },
     username: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false

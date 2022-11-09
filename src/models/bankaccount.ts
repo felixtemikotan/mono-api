@@ -10,6 +10,7 @@ interface BankAccountAtrribute{
     bankcode:string;
     accounttype:string;
     banktransactiontype:string;
+    servicetype:string;
     username:string;
     password:string;
 }
@@ -48,6 +49,10 @@ BankAccountInstance.init(
             allowNull:false
         },
         banktransactiontype:{
+            type:DataTypes.STRING,
+            allowNull:false
+        },
+        servicetype:{
             type:DataTypes.STRING,
             allowNull:false
         },
