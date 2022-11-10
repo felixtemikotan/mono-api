@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = exports.generateToken = exports.monoSessionLoginSchema = exports.updateBankAccountSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.createUserSchema = void 0;
+exports.options = exports.generateToken = exports.monoSessionLoginSchema = exports.getTransactionHistorySchema = exports.updateBankAccountSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.createUserSchema = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const joi_1 = __importDefault(require("joi"));
@@ -62,6 +62,9 @@ exports.updateBankAccountSchema = joi_1.default.object({
     password: joi_1.default.string(),
     confirmPassword: joi_1.default.ref('password')
 }).with('password', 'confirmPassword');
+exports.getTransactionHistorySchema = joi_1.default.object({
+    duration: joi_1.default.string().max(2).required(),
+});
 exports.monoSessionLoginSchema = joi_1.default.object({
     institution: joi_1.default.string().required()
 });

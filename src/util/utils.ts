@@ -66,6 +66,10 @@ export const updateBankAccountSchema = Joi.object({
     confirmPassword: Joi.ref('password')
 }).with('password', 'confirmPassword');
 
+export const getTransactionHistorySchema = Joi.object({
+    duration: Joi.string().max(2).required(),
+});
+
 export const monoSessionLoginSchema = Joi.object({
     institution: Joi.string().required()
 });

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMonoAccountDetails = exports.exchangeToken = exports.getAllMonoBanks = exports.monoSessionLogin = exports.tokenSignin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
+exports.getClientsDebitInflow = exports.getClientsCreditInflow = exports.getClientEarnings = exports.getClinetInvestment = exports.getTransactionHistory = exports.getClientIdentity = exports.getMonoAccountStat = exports.getMonoAccountDetails = exports.exchangeToken = exports.getAllMonoBanks = exports.monoSessionLogin = exports.tokenSignin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
 const uuid_1 = require("uuid");
 const users_1 = require("../models/users");
 const bankaccount_1 = require("../models/bankaccount");
@@ -417,13 +417,19 @@ async function exchangeToken(req, res, next) {
 exports.exchangeToken = exchangeToken;
 async function getMonoAccountDetails(req, res, next) {
     try {
-        const request = require('request');
+        const userId = req.user.id;
+        const SecretData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+        if (!SecretData) {
+            return res.status(404).json({ status: 404, error: 'Account not found' });
+        }
+        const { exchangetoken } = SecretData;
+        console.log(exchangetoken);
         const options = {
             method: 'GET',
-            url: 'https://api.withmono.com/accounts/636bccb8821b514843ab899c',
-            headers: { accept: 'application/json', 'mono-sec-key': 'live_sk_uueEcsoBUSfcSFekEkv6' }
+            url: `${monoBaseUrl}/accounts/${exchangetoken}`,
+            headers: { accept: 'application/json', 'mono-sec-key': monoSecretKey }
         };
-        request(options, function (error, response, body) {
+        (0, request_1.default)(options, function (error, response, body) {
             if (!error) {
                 const resultOut = JSON.parse(response.body);
                 console.log(resultOut);
@@ -437,3 +443,215 @@ async function getMonoAccountDetails(req, res, next) {
     }
 }
 exports.getMonoAccountDetails = getMonoAccountDetails;
+async function getMonoAccountStat(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const SecretData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+        if (!SecretData) {
+            return res.status(404).json({ status: 404, error: 'Account not found' });
+        }
+        const { exchangetoken } = SecretData;
+        const options = {
+            method: 'GET',
+            url: `${monoBaseUrl}/v1/accounts/${exchangetoken}/income`,
+            headers: {
+                accept: 'application/json',
+                'mono-sec-key': monoSecretKey,
+                'Content-Type': 'application/json'
+            }
+        };
+        (0, request_1.default)(options, function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                return res.status(200).json({ status: 200, msg: 'Mono Banks found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting mono account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getMonoAccountStat = getMonoAccountStat;
+async function getClientIdentity(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const SecretData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+        if (!SecretData) {
+            return res.status(404).json({ status: 404, error: 'Account not found' });
+        }
+        const { exchangetoken } = SecretData;
+        const options = {
+            method: 'GET',
+            url: `${monoBaseUrl}/accounts/${exchangetoken}/identity`,
+            headers: { accept: 'application/json', 'mono-sec-key': 'live_sk_uueEcsoBUSfcSFekEkv6' }
+        };
+        (0, request_1.default)(options, function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getClientIdentity = getClientIdentity;
+async function getTransactionHistory(req, res, next) {
+    try {
+        const validated = utils_1.getTransactionHistorySchema.validate(req.body, utils_1.options);
+        if (validated.error) {
+            return res.status(400).json({ status: 400, error: validated.error.details[0].message });
+        }
+        const { duration } = req.body;
+        const userId = req.user.id;
+        const SecretData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+        if (!SecretData) {
+            return res.status(404).json({ status: 404, error: 'Account not found' });
+        }
+        const { exchangetoken } = SecretData;
+        const option = {
+            method: 'GET',
+            url: `${monoBaseUrl}/accounts/${exchangetoken}/statement?period=last${duration}months&output=Json`,
+            headers: { accept: 'application/json', 'mono-sec-key': 'live_sk_uueEcsoBUSfcSFekEkv6' }
+        };
+        (0, request_1.default)(option, function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getTransactionHistory = getTransactionHistory;
+async function getClinetInvestment(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const SecretData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+        if (!SecretData) {
+            return res.status(404).json({ status: 404, error: 'Account not found' });
+        }
+        const { exchangetoken } = SecretData;
+        const options = {
+            method: 'GET',
+            url: `${monoBaseUrl}/accounts/${exchangetoken}/assets`,
+            headers: { accept: 'application/json', 'mono-sec-key': monoSecretKey }
+        };
+        (0, request_1.default)(options, async function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getClinetInvestment = getClinetInvestment;
+async function getClientEarnings(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const SecretData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+        if (!SecretData) {
+            return res.status(404).json({ status: 404, error: 'Account not found' });
+        }
+        const { exchangetoken } = SecretData;
+        const options = {
+            method: 'GET',
+            url: `${monoBaseUrl}/accounts/${exchangetoken}/earnings`,
+            headers: { accept: 'application/json', 'mono-sec-key': monoSecretKey }
+        };
+        (0, request_1.default)(options, function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getClientEarnings = getClientEarnings;
+//636bccb8821b514843ab899c
+//live_sk_uueEcsoBUSfcSFekEkv6
+async function getClientsCreditInflow(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const SecretData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+        if (!SecretData) {
+            return res.status(404).json({ status: 404, error: 'Account not found' });
+        }
+        const { exchangetoken } = SecretData;
+        const options = {
+            method: 'GET',
+            url: `${monoBaseUrl}/accounts/${exchangetoken}/credits`,
+            headers: { accept: 'application/json', 'mono-sec-key': monoSecretKey }
+        };
+        (0, request_1.default)(options, function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getClientsCreditInflow = getClientsCreditInflow;
+async function getClientsDebitInflow(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const SecretData = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+        if (!SecretData) {
+            return res.status(404).json({ status: 404, error: 'Account not found' });
+        }
+        const { exchangetoken } = SecretData;
+        const request = require('request');
+        const options = {
+            method: 'GET',
+            url: `${monoBaseUrl}/accounts/${exchangetoken}/debits?api_key=${monoAppId}`,
+            headers: { accept: 'application/json', 'mono-sec-key': monoSecretKey }
+        };
+        request(options, async function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                console.log(resultOut);
+                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.getClientsDebitInflow = getClientsDebitInflow;
+// {
+//     "id": "txreq_PtEfygW67SRzNty3eoxdTio0",
+//     "type": "onetime-debit",
+//     "amount": 20000,
+//     "description": "Shipping fee",
+//     "reference": "122343211678",
+//     "meta": null,
+//     "payment_link": "https://connect.withmono.com/?key=live_pk_kGWy0EHRM2iYUmy7xzsD&scope=payments&data=%7B%22amount%22%3A20000%2C%22description%22%3A%22Shipping%20fee%22%2C%22type%22%3A%22onetime-debit%22%2C%22reference%22%3A%22122343211678%22%7D",
+//     "created_at": "2022-11-10T12:11:02.458Z",
+//     "updated_at": "2022-11-10T12:11:02.458Z"
+//   } 122343211678
