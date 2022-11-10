@@ -29,4 +29,6 @@ router.get('/get-client-investment', auth_1.auth, user_1.getClinetInvestment);
 router.get('/get-client-earnings', auth_1.auth, user_1.getClientEarnings);
 router.get('/get-client-credit-inflow', auth_1.auth, user_1.getClientsCreditInflow);
 router.get('/get-client-debit-inflow', auth_1.auth, user_1.getClientsDebitInflow);
+router.post('/directpay-login', auth_1.auth, user_1.directPayLogin);
+router.post('/directpay-session', auth_1.auth, user_1.directPaySession);
 exports.default = router;

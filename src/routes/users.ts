@@ -4,7 +4,7 @@ import { auth } from '../middleware/auth';
 import { createUser,loginUser, updateUser, getUser,monoSessionLogin, getAllUsers,deleteUser, createBankAccount, tokenSignin, 
     updateBankAccount,getAllBankAccounts, deleteBankAccount,getMonoAccountDetails,exchangeToken, getMonoAccountStat,
     getAllMonoBanks,getClientIdentity,getTransactionHistory,getClinetInvestment,getClientEarnings,getClientsCreditInflow,
-    getClientsDebitInflow } from '../controllers/user';
+    getClientsDebitInflow,directPayLogin,directPaySession } from '../controllers/user';
 
 
 router.post('/signup', createUser);
@@ -29,5 +29,7 @@ router.get('/get-client-investment', auth, getClinetInvestment);
 router.get('/get-client-earnings', auth, getClientEarnings);
 router.get('/get-client-credit-inflow', auth, getClientsCreditInflow);
 router.get('/get-client-debit-inflow', auth, getClientsDebitInflow);
+router.post('/directpay-login',auth, directPayLogin);
+router.post('/directpay-session',auth, directPaySession);
 
 export default router
