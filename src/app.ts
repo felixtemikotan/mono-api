@@ -12,8 +12,6 @@ import userRouter from './routes/users';
 
 
 
- 
-//connectDb()
 //db.sync({force:true})
 db.sync({alter:true})
   .then(() => {

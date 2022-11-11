@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.directPaySession = exports.directPayLogin = exports.getClientsDebitInflow = exports.getClientsCreditInflow = exports.getClientEarnings = exports.getClinetInvestment = exports.getTransactionHistory = exports.getClientIdentity = exports.getMonoAccountStat = exports.getMonoAccountDetails = exports.exchangeToken = exports.getAllMonoBanks = exports.monoSessionLogin = exports.tokenSignin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
+exports.createCharge = exports.directPaySession = exports.directPayLogin = exports.getClientsDebitInflow = exports.getClientsCreditInflow = exports.getClientEarnings = exports.getClinetInvestment = exports.getTransactionHistory = exports.getClientIdentity = exports.getMonoAccountStat = exports.getMonoAccountDetails = exports.exchangeToken = exports.getAllMonoBanks = exports.monoSessionLogin = exports.tokenSignin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
 const uuid_1 = require("uuid");
 const users_1 = require("../models/users");
 const bankaccount_1 = require("../models/bankaccount");
@@ -170,7 +170,7 @@ async function createBankAccount(req, res, next) {
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { accountnumber, accountname, bankname, bankcode, accounttype, banktransactiontype, servicetype, username, password } = req.body;
+        const { accountnumber, accountname, bankname, accounttype, banktransactiontype, servicetype, username, password } = req.body;
         const duplicateAccountnumber = await bankaccount_1.BankAccountInstance.findOne({ where: { accountnumber } });
         if (duplicateAccountnumber) {
             return res.status(409).json({ status: 409, error: 'Accountnumber already exist' });
@@ -399,8 +399,8 @@ exports.getAllMonoBanks = getAllMonoBanks;
 async function exchangeToken(req, res, next) {
     try {
         const userId = req.user.id;
-        const loinCode = exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
-        const { logintoken } = loinCode;
+        const loginCode = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId } });
+        const { logintoken } = loginCode;
         const options = {
             method: 'POST',
             url: 'https://api.withmono.com/account/auth',
@@ -711,7 +711,8 @@ async function directPayLogin(req, res, next) {
                     const resultOut = await JSON.parse(response.body);
                     const loginCode = resultOut.data.code;
                     const storeSessionCode = await directpay_1.DirectPayInstance.update({ logintoken: loginCode }, { where: { userId: userId } });
-                    return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+                    const storedDirectTable = await directpay_1.DirectPayInstance.findOne({ where: { userId: userId } });
+                    return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut, storedDirectTable });
                 }
                 return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
             });
@@ -725,6 +726,10 @@ exports.directPayLogin = directPayLogin;
 async function directPaySession(req, res, next) {
     try {
         const userId = req.user.id;
+        const validateData = utils_1.directpaySessionSchema.validate(req.body, utils_1.options);
+        if (validateData.error) {
+            return res.status(400).json({ status: 400, error: validateData.error.details[0].message });
+        }
         const { description, amount } = req.body;
         const directPaySecret = await directpay_1.DirectPayInstance.findOne({ where: { userId: userId } });
         if (!directPaySecret) {
@@ -732,7 +737,7 @@ async function directPaySession(req, res, next) {
         }
         const { sessionId } = directPaySecret;
         const reference = (0, uuid_1.v4)();
-        const options = {
+        const option = {
             method: 'POST',
             url: `${monoBaseUrl}/v1/direct-pay/session`,
             headers: {
@@ -748,11 +753,12 @@ async function directPaySession(req, res, next) {
                 reference: reference
             }),
         };
-        (0, request_1.default)(options, async function (error, response, body) {
+        (0, request_1.default)(option, async function (error, response, body) {
             if (!error) {
                 const resultOut = await JSON.parse(response.body);
                 const directPaySessionCode = await directpay_1.DirectPayInstance.update({ exchangetoken: resultOut.code }, { where: { userId: userId } });
-                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+                const storedDirectTable = await directpay_1.DirectPayInstance.findOne({ where: { userId: userId } });
+                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut, storedDirectTable });
             }
             return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
         });
@@ -762,3 +768,40 @@ async function directPaySession(req, res, next) {
     }
 }
 exports.directPaySession = directPaySession;
+async function createCharge(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const validateData = utils_1.createChargeSchema.validate(req.body, utils_1.options);
+        if (validateData.error) {
+            return res.status(400).json({ status: 400, error: validateData.error.details[0].message });
+        }
+        const { token } = req.body;
+        const directPaySecret = await directpay_1.DirectPayInstance.findOne({ where: { userId: userId } });
+        if (!directPaySecret) {
+            return res.status(404).json({ status: 404, error: 'Direct Pay not found' });
+        }
+        const { sessionId } = directPaySecret;
+        const option = {
+            method: 'POST',
+            url: `${monoBaseUrl}/v1/direct-pay/charge`,
+            headers: {
+                accept: 'application/json',
+                'mono-sec-key': monoSecretKey,
+                'x-session-id': sessionId,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({ token: token }),
+        };
+        (0, request_1.default)(option, function (error, response, body) {
+            if (!error) {
+                const resultOut = JSON.parse(response.body);
+                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+            }
+            return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ status: 500, error: error.message });
+    }
+}
+exports.createCharge = createCharge;

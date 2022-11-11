@@ -31,4 +31,5 @@ router.get('/get-client-credit-inflow', auth_1.auth, user_1.getClientsCreditInfl
 router.get('/get-client-debit-inflow', auth_1.auth, user_1.getClientsDebitInflow);
 router.post('/directpay-login', auth_1.auth, user_1.directPayLogin);
 router.post('/directpay-session', auth_1.auth, user_1.directPaySession);
+router.post('/create-charge', auth_1.auth, user_1.createCharge);
 exports.default = router;

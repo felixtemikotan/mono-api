@@ -10,7 +10,6 @@ const database_config_1 = __importDefault(require("./config/database.config"));
 const cors_1 = __importDefault(require("cors"));
 require("dotenv/config");
 const users_1 = __importDefault(require("./routes/users"));
-//connectDb()
 //db.sync({force:true})
 database_config_1.default.sync({ alter: true })
     .then(() => {

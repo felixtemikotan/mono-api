@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = exports.generateToken = exports.monoSessionLoginSchema = exports.getTransactionHistorySchema = exports.updateBankAccountSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.createUserSchema = void 0;
+exports.options = exports.generateToken = exports.monoSessionLoginSchema = exports.getTransactionHistorySchema = exports.updateBankAccountSchema = exports.createChargeSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.directpaySessionSchema = exports.createUserSchema = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const joi_1 = __importDefault(require("joi"));
@@ -17,6 +17,10 @@ exports.createUserSchema = joi_1.default.object({
     password: joi_1.default.string().required(),
     confirmPassword: joi_1.default.ref('password')
 }).with('password', 'confirmPassword');
+exports.directpaySessionSchema = joi_1.default.object({
+    amount: joi_1.default.string().required(),
+    description: joi_1.default.string().required(),
+});
 exports.updateUserSchema = joi_1.default.object({
     firstname: joi_1.default.string(),
     lastname: joi_1.default.string(),
@@ -51,6 +55,9 @@ exports.createBankAccountSchema = joi_1.default.object({
     password: joi_1.default.string().required(),
     confirmPassword: joi_1.default.ref('password')
 }).with('password', 'confirmPassword');
+exports.createChargeSchema = joi_1.default.object({
+    token: joi_1.default.string().required()
+});
 exports.updateBankAccountSchema = joi_1.default.object({
     accountnumber: joi_1.default.string().length(10).pattern(/^[0-9]+$/),
     accountname: joi_1.default.string(),

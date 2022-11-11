@@ -14,6 +14,11 @@ export const createUserSchema = Joi.object({
     confirmPassword: Joi.ref('password')
 }).with('password', 'confirmPassword');
 
+export const directpaySessionSchema = Joi.object({
+    amount: Joi.string().required(),
+    description: Joi.string().required(),
+});
+
 export const updateUserSchema = Joi.object({
     firstname: Joi.string(),
     lastname: Joi.string(),
@@ -53,6 +58,10 @@ export const createBankAccountSchema = Joi.object({
     password: Joi.string().required(),
     confirmPassword: Joi.ref('password')
 }).with('password', 'confirmPassword');
+
+export const createChargeSchema= Joi.object({
+    token: Joi.string().required()
+});
 
 export const updateBankAccountSchema = Joi.object({
     accountnumber: Joi.string().length(10).pattern(/^[0-9]+$/),

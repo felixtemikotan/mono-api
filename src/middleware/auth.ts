@@ -33,7 +33,7 @@ export async function auth (req:Request | any,res:Response,next:NextFunction){
          })
          return
      }
-     req.user = verified 
+     req.user = verified;
      next()
   }catch (error){
      res.status(500)
