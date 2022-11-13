@@ -60,8 +60,19 @@ export const createBankAccountSchema = Joi.object({
 }).with('password', 'confirmPassword');
 
 export const createChargeSchema= Joi.object({
-    token: Joi.string().required()
+    token: Joi.string().required(),
+    answer: Joi.string().required(),
+    otp: Joi.string().required(),
 });
+
+export const captureChargeSchema= Joi.object({
+    answer: Joi.string().required(),
+    token: Joi.string().required(),
+    pin: Joi.string().required(),
+    bvn: Joi.string().required(),
+});
+
+
 
 export const updateBankAccountSchema = Joi.object({
     accountnumber: Joi.string().length(10).pattern(/^[0-9]+$/),

@@ -4,7 +4,7 @@ import { v4 as uuidv4, validate } from "uuid";
 import { UserInstance }  from "../models/users";
 import { BankAccountInstance }  from "../models/bankaccount";
 import {options,createUserSchema, loginUserSchema, createBankAccountSchema,updateUserSchema,monoSessionLoginSchema,
-    updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema, otpLoginSchema, getTransactionHistorySchema, directpaySessionSchema, createChargeSchema } from '../util/utils'
+    updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema, otpLoginSchema, getTransactionHistorySchema, directpaySessionSchema, createChargeSchema, captureChargeSchema } from '../util/utils'
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import request from 'request';
@@ -348,7 +348,7 @@ export async function monoSessionLogin(req:Request|any,res:Response,next:NextFun
         }
         )
        
-        if(response.data.status !== 'successful'){
+        if(!response.data.status){
             return res.status(400).json({ status: 400, msg: 'An error has occured while creating mono session',response });
         }
         const {data}:any = response;
@@ -374,7 +374,11 @@ export async function monoSessionLogin(req:Request|any,res:Response,next:NextFun
                 return res.status(400).json({ status: 400, error: error});  
             }
             const result:any = await JSON.parse(response.body);
-           console.log(result.data);
+          
+            if(!result.status || result.status ===400){ 
+                return res.status(400).json({ status: 400, message: result});
+            }
+            console.log(result);
            const record=await ExchangeTokenInstance.update({ logintoken:result.data.code }, { where: { userId:userId } });
            const recordOut=await ExchangeTokenInstance.findOne({ where: { userId:userId } });
           
@@ -740,8 +744,7 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
             app: monoAppId,
             auth_method: auth_method,
             institution: institution
-        }),
-        
+        })
         };
 
         request(option, async function (error:any, response:Response|any, body:any) {
@@ -761,14 +764,17 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
                 'mono-sec-key': monoSecretKey,
                 'content-type': 'application/json'
             },
-            body: JSON.stringify({username: decryptedUsername, password: decryptedPassword}),
+            body: JSON.stringify({username: decryptedUsername, password: decryptedPassword})
             };
             request(options, async function (error:any, response:Response|any, body:any) {
                 if(!error){
                     const resultOut= await JSON.parse(response.body);
+                    console.log(resultOut);
+                 if(!resultOut.status || resultOut.status === 400){
+                    return res.status(400).json({ status: 400, msg: 'An error has occured while trying to connect to your bank. Please try again later',resultOut});
+                    }
 
                     const loginCode=resultOut.data.code;
-
                      const storeSessionCode = await DirectPayInstance.update({logintoken:loginCode},{ where: { userId:userId } });
                      const storedDirectTable=await DirectPayInstance.findOne({where:{userId:userId}})
                    
@@ -799,8 +805,9 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
                 }
                 const {sessionId}=directPaySecret;
                 const reference=uuidv4();
+                console.log(sessionId,amount,description,reference,monoSecretKey);
                 
-
+               
             const option = {
             method: 'POST',
             url: `${monoBaseUrl}/v1/direct-pay/session`,
@@ -810,17 +817,24 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
                 'x-session-id': sessionId,
                 'content-type': 'application/json'
             },
-            body: JSON.stringify({
-                type: 'onetime-debit',
-                amount: amount,
-                description: description,
-                reference: reference
-            }),
+            body: JSON.stringify({type: 'onetime-debit', amount: amount,description: description,reference: reference})
             };
-
+            // const options = {
+            //     method: 'POST',
+            //     url: 'https://api.withmono.com/account/auth',
+            //     headers: {
+            //         accept: 'application/json',
+            //         'mono-sec-key': monoSecretKey,
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({code: logintoken})
+            //     };
+            console.log(1)
             request(option, async function (error, response, body) {
+                console.log(response.body)
                 if(!error){
                     const resultOut= await JSON.parse(response.body);
+                    console.log(resultOut);
                     const directPaySessionCode= await DirectPayInstance.update({exchangetoken:resultOut.code},{ where: { userId:userId } });
                     const storedDirectTable=await DirectPayInstance.findOne({where:{userId:userId}})
                     return res.status(200).json({ status: 200, msg: 'User details found successfully',resultOut,storedDirectTable});
@@ -843,7 +857,7 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
                 if(validateData.error){
                     return res.status(400).json({ status: 400, error: validateData.error.details[0].message });
                 }
-                const {token}=req.body;
+                const {token,answer,otp}=req.body;
                 const directPaySecret:any=await DirectPayInstance.findOne({where:{userId:userId}})
                 if (!directPaySecret) {
                     return res.status(404).json({ status: 404, error: 'Direct Pay not found' });
@@ -858,7 +872,7 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
                     'x-session-id': sessionId,
                     'content-type': 'application/json'
                 },
-                body: JSON.stringify({token: token}),
+                body: JSON.stringify({token: token, answer: answer, otp: otp})
                 };
 
                 request(option, function (error:any, response:Response|any, body:any) {
@@ -869,6 +883,50 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
                     return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details',error});
 
                 });
+            }catch(error:any){
+                return res.status(500).json({ status: 500, error: error.message });
+            }
+        }
+
+        export async function captureCharge(req:Request|any,res:Response,next:NextFunction){
+            try{
+                     const userId=req.user.id;
+                const validateData=captureChargeSchema.validate(req.body, options);
+
+                if(validateData.error){
+                    return res.status(400).json({ status: 400, error: validateData.error.details[0].message });
+                }
+                const {answer,token,bvn,pin}=req.body;
+
+                const directPaySecret:any=await DirectPayInstance.findOne({where:{userId:userId}})
+                if (!directPaySecret) {
+                    return res.status(404).json({ status: 404, error: 'Direct Pay not found' });
+                }
+                const {sessionId}=directPaySecret;
+
+
+                    const option = {
+                    method: 'POST',
+                    url: `${monoBaseUrl}/v1/direct-pay/capture`,
+                    headers: {
+                        accept: 'application/json',
+                        'mono-sec-key': monoSecretKey,
+                        'x-session-id': sessionId,
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify({answer: answer, token: token, bvn: bvn, pin: pin})
+                   
+                    };
+
+                    request(option, function (error, response, body) {
+                        if(!error){
+                            const resultOut= JSON.parse(response.body);
+                            return res.status(200).json({ status: 200, msg: 'User details found successfully',resultOut});
+                        }
+                        return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details',error});
+
+                    });
+
             }catch(error:any){
                 return res.status(500).json({ status: 500, error: error.message });
             }
