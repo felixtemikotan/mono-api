@@ -59,6 +59,14 @@ export const createBankAccountSchema = Joi.object({
     confirmPassword: Joi.ref('password')
 }).with('password', 'confirmPassword');
 
+export const confirmPaymentVerificationSchema = Joi.object({
+    answer: Joi.string().required(),
+    token: Joi.string().required(),
+    bvn: Joi.string().required(),
+    pin: Joi.string().required(),
+});
+
+
 export const createChargeSchema= Joi.object({
     token: Joi.string().required(),
     answer: Joi.string().required(),

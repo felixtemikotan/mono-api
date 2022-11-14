@@ -4,7 +4,7 @@ import { v4 as uuidv4, validate } from "uuid";
 import { UserInstance }  from "../models/users";
 import { BankAccountInstance }  from "../models/bankaccount";
 import {options,createUserSchema, loginUserSchema, createBankAccountSchema,updateUserSchema,monoSessionLoginSchema,
-    updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema, otpLoginSchema, getTransactionHistorySchema, directpaySessionSchema, createChargeSchema, captureChargeSchema } from '../util/utils'
+    updateBankAccountSchema, monoLoginSchema, createMonoSessionSchema, otpLoginSchema, getTransactionHistorySchema, directpaySessionSchema, createChargeSchema, captureChargeSchema, confirmPaymentVerificationSchema } from '../util/utils'
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import request from 'request';
@@ -831,9 +831,12 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
             //     };
             console.log(1)
             request(option, async function (error, response, body) {
-                console.log(response.body)
+                console.log(2)
+                
+                console.log(response);
                 if(!error){
-                    const resultOut= await JSON.parse(response.body);
+                    console.log(3)
+                    const resultOut= JSON.parse(response.body);
                     console.log(resultOut);
                     const directPaySessionCode= await DirectPayInstance.update({exchangetoken:resultOut.code},{ where: { userId:userId } });
                     const storedDirectTable=await DirectPayInstance.findOne({where:{userId:userId}})
@@ -888,23 +891,32 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
             }
         }
 
-        export async function captureCharge(req:Request|any,res:Response,next:NextFunction){
+
+        export async function confirmPaymentVerification(req:Request|any,res:Response,next:NextFunction){
             try{
-                     const userId=req.user.id;
-                const validateData=captureChargeSchema.validate(req.body, options);
-
-                if(validateData.error){
-                    return res.status(400).json({ status: 400, error: validateData.error.details[0].message });
-                }
-                const {answer,token,bvn,pin}=req.body;
-
-                const directPaySecret:any=await DirectPayInstance.findOne({where:{userId:userId}})
-                if (!directPaySecret) {
-                    return res.status(404).json({ status: 404, error: 'Direct Pay not found' });
-                }
-                const {sessionId}=directPaySecret;
-
-
+                    const userId=req.user.id;  
+                    const directPaySecret:any=await DirectPayInstance.findOne({where:{userId:userId}})
+                    if (!directPaySecret) {
+                        return res.status(404).json({ status: 404, error: 'Direct Pay not found' });
+                    }
+                    const {sessionId}=directPaySecret;
+                    const {error}=confirmPaymentVerificationSchema.validate(req.body, options);
+                    if(error){
+                        return res.status(400).json({ status: 400, error: error.details[0].message });
+                    }
+                    let body={};
+                    const {answer,token,bvn,pin}=req.body;
+                    if(answer){
+                        body={answer: answer};
+                    }else if(token){
+                        body={token: token};
+                    }else if(bvn){
+                        body={bvn: bvn};
+                    }else if(pin){
+                        body={pin: pin};
+                    }else{
+                        return res.status(400).json({ status: 400, error: 'Invalid request, all fields cannot be empty.' });
+                    }
                     const option = {
                     method: 'POST',
                     url: `${monoBaseUrl}/v1/direct-pay/capture`,
@@ -914,19 +926,17 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
                         'x-session-id': sessionId,
                         'content-type': 'application/json'
                     },
-                    body: JSON.stringify({answer: answer, token: token, bvn: bvn, pin: pin})
-                   
+                    body: JSON.stringify(body)
                     };
 
                     request(option, function (error, response, body) {
                         if(!error){
                             const resultOut= JSON.parse(response.body);
-                            return res.status(200).json({ status: 200, msg: 'User details found successfully',resultOut});
+                            return res.status(200).json({ status: 200, msg: 'Payment is being processed',resultOut});
                         }
-                        return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details',error});
+                        return res.status(400).json({ status: 400, msg: 'An error has occured while processing this payment',error});
 
                     });
-
             }catch(error:any){
                 return res.status(500).json({ status: 500, error: error.message });
             }

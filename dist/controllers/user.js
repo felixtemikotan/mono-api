@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.captureCharge = exports.createCharge = exports.directPaySession = exports.directPayLogin = exports.getClientsDebitInflow = exports.getClientsCreditInflow = exports.getClientEarnings = exports.getClinetInvestment = exports.getTransactionHistory = exports.getClientIdentity = exports.getMonoAccountStat = exports.getMonoAccountDetails = exports.exchangeToken = exports.getAllMonoBanks = exports.monoSessionLogin = exports.tokenSignin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
+exports.confirmPaymentVerification = exports.createCharge = exports.directPaySession = exports.directPayLogin = exports.getClientsDebitInflow = exports.getClientsCreditInflow = exports.getClientEarnings = exports.getClinetInvestment = exports.getTransactionHistory = exports.getClientIdentity = exports.getMonoAccountStat = exports.getMonoAccountDetails = exports.exchangeToken = exports.getAllMonoBanks = exports.monoSessionLogin = exports.tokenSignin = exports.getAllBankAccounts = exports.deleteBankAccount = exports.updateBankAccount = exports.createBankAccount = exports.getAllUsers = exports.getUser = exports.deleteUser = exports.updateUser = exports.loginUser = exports.createUser = void 0;
 const uuid_1 = require("uuid");
 const users_1 = require("../models/users");
 const bankaccount_1 = require("../models/bankaccount");
@@ -768,9 +768,11 @@ async function directPaySession(req, res, next) {
         //     };
         console.log(1);
         (0, request_1.default)(option, async function (error, response, body) {
-            console.log(response.body);
+            console.log(2);
+            console.log(response);
             if (!error) {
-                const resultOut = await JSON.parse(response.body);
+                console.log(3);
+                const resultOut = JSON.parse(response.body);
                 console.log(resultOut);
                 const directPaySessionCode = await directpay_1.DirectPayInstance.update({ exchangetoken: resultOut.code }, { where: { userId: userId } });
                 const storedDirectTable = await directpay_1.DirectPayInstance.findOne({ where: { userId: userId } });
@@ -821,19 +823,35 @@ async function createCharge(req, res, next) {
     }
 }
 exports.createCharge = createCharge;
-async function captureCharge(req, res, next) {
+async function confirmPaymentVerification(req, res, next) {
     try {
         const userId = req.user.id;
-        const validateData = utils_1.captureChargeSchema.validate(req.body, utils_1.options);
-        if (validateData.error) {
-            return res.status(400).json({ status: 400, error: validateData.error.details[0].message });
-        }
-        const { answer, token, bvn, pin } = req.body;
         const directPaySecret = await directpay_1.DirectPayInstance.findOne({ where: { userId: userId } });
         if (!directPaySecret) {
             return res.status(404).json({ status: 404, error: 'Direct Pay not found' });
         }
         const { sessionId } = directPaySecret;
+        const { error } = utils_1.confirmPaymentVerificationSchema.validate(req.body, utils_1.options);
+        if (error) {
+            return res.status(400).json({ status: 400, error: error.details[0].message });
+        }
+        let body = {};
+        const { answer, token, bvn, pin } = req.body;
+        if (answer) {
+            body = { answer: answer };
+        }
+        else if (token) {
+            body = { token: token };
+        }
+        else if (bvn) {
+            body = { bvn: bvn };
+        }
+        else if (pin) {
+            body = { pin: pin };
+        }
+        else {
+            return res.status(400).json({ status: 400, error: 'Invalid request, all fields cannot be empty.' });
+        }
         const option = {
             method: 'POST',
             url: `${monoBaseUrl}/v1/direct-pay/capture`,
@@ -843,18 +861,18 @@ async function captureCharge(req, res, next) {
                 'x-session-id': sessionId,
                 'content-type': 'application/json'
             },
-            body: JSON.stringify({ answer: answer, token: token, bvn: bvn, pin: pin })
+            body: JSON.stringify(body)
         };
         (0, request_1.default)(option, function (error, response, body) {
             if (!error) {
                 const resultOut = JSON.parse(response.body);
-                return res.status(200).json({ status: 200, msg: 'User details found successfully', resultOut });
+                return res.status(200).json({ status: 200, msg: 'Payment is being processed', resultOut });
             }
-            return res.status(400).json({ status: 400, msg: 'An error has occured while getting account details', error });
+            return res.status(400).json({ status: 400, msg: 'An error has occured while processing this payment', error });
         });
     }
     catch (error) {
         return res.status(500).json({ status: 500, error: error.message });
     }
 }
-exports.captureCharge = captureCharge;
+exports.confirmPaymentVerification = confirmPaymentVerification;
