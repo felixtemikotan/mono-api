@@ -835,8 +835,8 @@ async function confirmPaymentVerification(req, res, next) {
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        let body = {};
         const { answer, token, bvn, pin } = req.body;
+        let body = {};
         if (answer) {
             body = { answer: answer };
         }
