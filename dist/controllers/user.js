@@ -354,6 +354,7 @@ async function monoSessionLogin(req, res, next) {
             },
             body: JSON.stringify({ username: detokenizedUsername.username, password: detokenizedPassword.password })
         };
+        console.log(detokenizedUsername.username, detokenizedPassword.password);
         (0, request_1.default)(option, async function (error, response) {
             if (error) {
                 return res.status(400).json({ status: 400, error: error });

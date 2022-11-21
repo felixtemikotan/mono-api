@@ -368,7 +368,7 @@ export async function monoSessionLogin(req:Request|any,res:Response,next:NextFun
             },
             body: JSON.stringify({username: detokenizedUsername.username, password: detokenizedPassword.password})
           };
-         
+         console.log(detokenizedUsername.username, detokenizedPassword.password);
           request(option, async function (error, response) { 
             if (error) {
                 return res.status(400).json({ status: 400, error: error});  
@@ -664,7 +664,7 @@ export async function getClientEarnings(req:Request|any, res:Response, next:Next
     
             request(options, async function (error, response, body) {
              if(!error){
-            const resultOut=await JSON.parse(response.body);
+            const resultOut:any=await JSON.parse(response.body);
             console.log(resultOut);
             return res.status(200).json({ status: 200, msg: 'User details found successfully',resultOut});
                 }

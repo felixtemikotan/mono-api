@@ -14,7 +14,15 @@ import { db_host, db_port, db_name, db_user, db_password } from './config';
 
   username: db_user,
 
-  password: db_password
+  password: db_password,
+
+
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  }
 
 });
 export default db;
