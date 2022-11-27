@@ -388,6 +388,10 @@ async function getAllMonoBanks(req, res, next) {
                     bankId: item._id,
                     bankName: item.name,
                     serviceYype: item.type,
+                    icon: item.icon,
+                    type: item.auth_methods[0].type,
+                    username: item.ui.form[0].name,
+                    password: item.ui.form[1].name
                 };
             });
             const numberOfBanks = formattedOutput.length;
