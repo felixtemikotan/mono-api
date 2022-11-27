@@ -1,13 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.db_password = exports.db_user = exports.db_name = exports.db_port = exports.db_host = void 0;
-const dotenv = require('dotenv');
-dotenv.config();
-exports.db_host = String(process.env.DB_HOST);
-exports.db_port = Number(process.env.DB_PORT);
-exports.db_name = String(process.env.DB_NAME);
-exports.db_user = String(process.env.DB_USER);
-exports.db_password = String(process.env.DB_PASSWORD);
-// DB_NAME=mono_api
-// DB_USER=postgres
-// DB_PASSWORD=GskuvimR@1127
+const sequelize_1 = require("sequelize");
+const db = new sequelize_1.Sequelize('app', "", "", {
+    storage: "./database.sqlite",
+    dialect: "sqlite",
+    logging: false
+});
+exports.default = db;

@@ -1,5 +1,5 @@
 import {DataTypes,Model} from 'sequelize';
-import db from '../config/database.config';
+import db from '../config/config';
 
 interface ExchangeTokenAttribute{
     id:string;

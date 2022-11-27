@@ -2,35 +2,27 @@ import { DataTypes, Model } from 'sequelize';
 import db from '../config/config';
 import { BankAccountInstance } from './bankaccount';
 
-/*
-id,
-            fullname,
-            username,
-            email,
-            phonenumber,
-            password: hashedPin,
-*/
-interface UserAtrribute {
-  id: string;
-  fullname: string,
+interface LinkBankAtrribute {
+  bankId: string;
+  userId: string,
+  icon: string;
+  bankName: string;
   username: string;
-  email: string;
-  mobile: string;
-  pin: string;
+  password: string;
   wallet: number,
 }
 
-export class UserInstance extends Model<UserAtrribute> {}
+export class LinkedBankInstance extends Model<LinkBankAtrribute> {}
 
-UserInstance.init(
+LinkedBankInstance.init(
   {
-    id: {
+    bankId: {
       type: DataTypes.STRING,
       primaryKey: true,
       allowNull: false
     },
 
-    fullname: {
+    userId: {
       type: DataTypes.STRING,
       allowNull: false
     },
@@ -38,19 +30,19 @@ UserInstance.init(
       type: DataTypes.STRING,
       allowNull: false
     },
-    email: {
+    icon: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true
     },
     
-    mobile: {
+    bankName: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
     }, 
    
-    pin: {
+    password: {
         type: DataTypes.STRING,
         allowNull: false
     },
@@ -62,9 +54,8 @@ UserInstance.init(
   },
   {
     sequelize: db,
-    tableName: 'userTable'
+    tableName: 'linkedBanksTable'
   }
 );
 
- UserInstance.hasMany(BankAccountInstance, { foreignKey: "userId", as: "bankaccounts" });
- BankAccountInstance.belongsTo(UserInstance, { foreignKey: "userId", as: "user" });
+ 

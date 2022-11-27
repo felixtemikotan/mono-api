@@ -31,6 +31,7 @@
         "morgan": "^1.10.0",
         "pg": "^8.8.0",
         "sequelize": "^6.25.5",
+        "sqlite3": "^5.1.2",
         "uuid": "^9.0.0"
     },
     "devDependencies": {
@@ -38,6 +39,8 @@
         "@types/cookie-parser": "^1.4.3",
         "@types/jsonwebtoken": "^8.5.9",
         "@types/morgan": "^1.9.3",
-        "@types/request": "^2.48.8"
+        "@types/nodemon": "^1.19.2",
+        "@types/request": "^2.48.8",
+        "nodemon": "^2.0.20"
     }
 }

@@ -26,7 +26,7 @@ export async function createUser(req: Request, res: Response, next: NextFunction
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { firstname, lastname, username, email, phonenumber, password } = req.body;
+        const { fullname,username, email, mobile, pin } = req.body;
         const duplicateEmail = await UserInstance.findOne({ where: { email } });
         if (duplicateEmail) {
             return res.status(409).json({ status: 409, error: 'Email already exist' });
@@ -35,24 +35,24 @@ export async function createUser(req: Request, res: Response, next: NextFunction
         if (duplicateUsername) {
             return res.status(409).json({ status: 409, error: 'Username already exist' });
         }
-        const duplicatePhonenumber = await UserInstance.findOne({ where: { phonenumber } });
+        const duplicatePhonenumber = await UserInstance.findOne({ where: { mobile } });
         if (duplicatePhonenumber) {
             return res.status(409).json({ status: 409, error: 'Phonenumber already exist' });
         }
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPin = await bcrypt.hash(pin, salt);
 
         const id = uuidv4();
         const regID=id;
 
         const user = await UserInstance.create({
             id,
-            firstname,
-            lastname,
+            fullname,
             username,
             email,
-            phonenumber,
-            password: hashedPassword,
+            mobile,
+            pin: hashedPin,
+            wallet:0.00
         });
         if(!user){
             return res.status(500).json({ status: 500, error: 'Internal server error' });
@@ -90,14 +90,14 @@ export async function loginUser(req: Request, res: Response, next: NextFunction)
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { email, password } = req.body;
-        const user:any = await UserInstance.findOne({ where: { email } });
+        const { mobile, pin } = req.body;
+        const user:any = await UserInstance.findOne({ where: { mobile } });
         if (!user) {
-            return res.status(400).json({ status: 400, error: 'Invalid email or password' });
+            return res.status(400).json({ status: 400, error: 'Invalid phoneNumber or pin' });
         }
-        const validPassword = bcrypt.compareSync(password, user.password);
+        const validPassword = bcrypt.compareSync(pin, user.pin);
         if (!validPassword) {
-            return res.status(400).json({ status: 400, error: 'Invalid email or password' });
+            return res.status(400).json({ status: 400, error: 'Invalid pin or PhoneNumber' });
         }
         const{id}=user;
         const token = jwt.sign({ id: user.id }, secret as string);
@@ -114,13 +114,13 @@ export async function updateUser(req:Request, res:Response, next:NextFunction){
         if (error) {
             return res.status(400).json({ status: 400, error: error.details[0].message });
         }
-        const { firstname, lastname, email, phonenumber } = req.body;
+        const { fullname, email, mobile } = req.body;
         const user = await UserInstance.findOne({ where: { id } });
         if (!user) {
             return res.status(404).json({ status: 404, error: 'User not found' });
         }
        
-        const record=await UserInstance.update({ firstname, lastname, email, phonenumber }, { where: { id } });
+        const record=await UserInstance.update({ fullname, email, mobile }, { where: { id } });
         return res.status(200).json({ status: 200, msg: 'User updated successfully',record });
     } catch (error: any) {
         return res.status(500).json({ status: 500, error: error.message });

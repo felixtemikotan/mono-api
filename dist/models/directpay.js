@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DirectPayInstance = void 0;
 const sequelize_1 = require("sequelize");
-const database_config_1 = __importDefault(require("../config/database.config"));
+const config_1 = __importDefault(require("../config/config"));
 class DirectPayInstance extends sequelize_1.Model {
 }
 exports.DirectPayInstance = DirectPayInstance;
@@ -32,6 +32,6 @@ DirectPayInstance.init({
         allowNull: true
     }
 }, {
-    sequelize: database_config_1.default,
+    sequelize: config_1.default,
     tableName: 'directPayTable'
 });

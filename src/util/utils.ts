@@ -5,14 +5,12 @@ import Joi from "joi";
 dotenv.config();
 
 export const createUserSchema = Joi.object({
-    firstname: Joi.string().required(),
-    lastname: Joi.string().required(),
+    fullname: Joi.string().required(),
     username: Joi.string().required(),
     email: Joi.string().email().required(),
-    phonenumber: Joi.string().length(11).pattern(/^[0-9]+$/).required(),
-    password: Joi.string().required(),
-    confirmPassword: Joi.ref('password')
-}).with('password', 'confirmPassword');
+    mobile: Joi.string().length(11).pattern(/^[0-9]+$/).required(),
+    pin: Joi.string().required(),
+})
 
 export const directpaySessionSchema = Joi.object({
     amount: Joi.string().required(),
@@ -23,7 +21,7 @@ export const updateUserSchema = Joi.object({
     firstname: Joi.string(),
     lastname: Joi.string(),
     email: Joi.string().email(),
-    phonenumber: Joi.string().length(11).pattern(/^[0-9]+$/),
+    mobile: Joi.string().length(11).pattern(/^[0-9]+$/),
 });
 
 export const otpLoginSchema = Joi.object({
@@ -32,8 +30,8 @@ export const otpLoginSchema = Joi.object({
 });
 
 export const loginUserSchema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().required()
+    mobile: Joi.string().required(),
+    pin: Joi.string().required()
 });
 
 export const monoLoginSchema= Joi.object({

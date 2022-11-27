@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserInstance = void 0;
 const sequelize_1 = require("sequelize");
-const database_config_1 = __importDefault(require("../config/database.config"));
+const config_1 = __importDefault(require("../config/config"));
 const bankaccount_1 = require("./bankaccount");
 class UserInstance extends sequelize_1.Model {
 }
@@ -16,11 +16,7 @@ UserInstance.init({
         primaryKey: true,
         allowNull: false
     },
-    firstname: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false
-    },
-    lastname: {
+    fullname: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
@@ -33,17 +29,22 @@ UserInstance.init({
         allowNull: false,
         unique: true
     },
-    phonenumber: {
+    mobile: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
         unique: true
     },
-    password: {
+    pin: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
+    wallet: {
+        type: sequelize_1.DataTypes.FLOAT,
+        defaultValue: 0.00,
+        allowNull: false
+    }
 }, {
-    sequelize: database_config_1.default,
+    sequelize: config_1.default,
     tableName: 'userTable'
 });
 UserInstance.hasMany(bankaccount_1.BankAccountInstance, { foreignKey: "userId", as: "bankaccounts" });

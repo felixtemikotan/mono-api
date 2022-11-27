@@ -6,17 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http_errors_1 = __importDefault(require("http-errors"));
 const express_1 = __importDefault(require("express"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const database_config_1 = __importDefault(require("./config/database.config"));
+const config_1 = __importDefault(require("./config/config"));
 const cors_1 = __importDefault(require("cors"));
 require("dotenv/config");
 const users_1 = __importDefault(require("./routes/users"));
 //db.sync({force:true})
-database_config_1.default.sync({ alter: true })
-    .then(() => {
-    console.log('Database conneted successfully');
-})
-    .catch((err) => {
-    console.log(err);
+config_1.default.sync().then(() => {
+    console.log('Database connected Successfully');
 });
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());

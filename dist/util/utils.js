@@ -9,14 +9,12 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const joi_1 = __importDefault(require("joi"));
 dotenv_1.default.config();
 exports.createUserSchema = joi_1.default.object({
-    firstname: joi_1.default.string().required(),
-    lastname: joi_1.default.string().required(),
+    fullname: joi_1.default.string().required(),
     username: joi_1.default.string().required(),
     email: joi_1.default.string().email().required(),
-    phonenumber: joi_1.default.string().length(11).pattern(/^[0-9]+$/).required(),
-    password: joi_1.default.string().required(),
-    confirmPassword: joi_1.default.ref('password')
-}).with('password', 'confirmPassword');
+    mobile: joi_1.default.string().length(11).pattern(/^[0-9]+$/).required(),
+    pin: joi_1.default.string().required(),
+});
 exports.directpaySessionSchema = joi_1.default.object({
     amount: joi_1.default.string().required(),
     description: joi_1.default.string().required(),
@@ -25,15 +23,15 @@ exports.updateUserSchema = joi_1.default.object({
     firstname: joi_1.default.string(),
     lastname: joi_1.default.string(),
     email: joi_1.default.string().email(),
-    phonenumber: joi_1.default.string().length(11).pattern(/^[0-9]+$/),
+    mobile: joi_1.default.string().length(11).pattern(/^[0-9]+$/),
 });
 exports.otpLoginSchema = joi_1.default.object({
     otp: joi_1.default.string().required(),
     sessionId: joi_1.default.string().required(),
 });
 exports.loginUserSchema = joi_1.default.object({
-    email: joi_1.default.string().email().required(),
-    password: joi_1.default.string().required()
+    mobile: joi_1.default.string().required(),
+    pin: joi_1.default.string().required()
 });
 exports.monoLoginSchema = joi_1.default.object({
     username: joi_1.default.string().required(),

@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
-import db from './config/database.config';
+import db from './config/config';
 import cors from 'cors';
 import 'dotenv/config';
 
@@ -13,13 +13,9 @@ import userRouter from './routes/users';
 
 
 //db.sync({force:true})
-db.sync({alter:true})
-  .then(() => {
-    console.log('Database conneted successfully');
-  })
-  .catch((err: Error) => {
-    console.log(err);
-  });
+db.sync().then(()=>{
+  console.log('Database connected Successfully')
+});
 
 const app = express();
 
