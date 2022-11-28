@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import db from '../config/config';
-import { BankAccountInstance } from './bankaccount';
+
 
 interface LinkBankAtrribute {
   bankId: string;
@@ -9,6 +9,7 @@ interface LinkBankAtrribute {
   bankName: string;
   username: string;
   password: string;
+  serviceType:string;
   wallet: number,
 }
 
@@ -46,11 +47,15 @@ LinkedBankInstance.init(
         type: DataTypes.STRING,
         allowNull: false
     },
+    serviceType:{
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     wallet:{
       type:DataTypes.FLOAT,
       defaultValue:0.00,
       allowNull:false
-    }
+    },
   },
   {
     sequelize: db,

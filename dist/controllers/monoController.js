@@ -5,12 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.monoSessionLoginCredential = void 0;
 const uuid_1 = require("uuid");
-const bankaccount_1 = require("../models/bankaccount");
 const linkedBanks_1 = require("../models/linkedBanks");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const request_1 = __importDefault(require("request"));
 const axios_1 = __importDefault(require("axios"));
-const exchangeToken_1 = require("../models/exchangeToken");
 const secret = process.env.JWT_SECRET;
 const monoSecretKey = process.env.MONO_SECRET_KEY;
 const monoAppId = process.env.MONO_APP_ID;
@@ -32,15 +30,15 @@ async function monoSessionLoginCredential(req, res, next) {
         // }
         const { userId, bankId, password, username, icon, bankName, servicetype } = req.body;
         //const userId=req.user.id;
-        const userBankInfo = await bankaccount_1.BankAccountInstance.findOne({ where: { userId: userId, bankcode: bankId } });
-        if (!userBankInfo) {
-            return res.status(404).json({ status: 404, error: 'Bank Account not found' });
-        }
+        // const userBankInfo:any = await BankAccountInstance.findOne({ where: { userId:userId, bankcode:bankId } });
+        // if (!userBankInfo) {
+        //     return res.status(404).json({ status: 404, error: 'Bank Account not found' });
+        // }
         const id = (0, uuid_1.v4)();
         const tokenizedUsername = jsonwebtoken_1.default.sign({ username: username }, secret);
         const tokenizedPassword = jsonwebtoken_1.default.sign({ password: password }, secret);
-        const detokenizedUsername = jsonwebtoken_1.default.verify(username, secret);
-        const detokenizedPassword = jsonwebtoken_1.default.verify(password, secret);
+        // const detokenizedUsername:any=jwt.verify(username, secret as string);
+        // const detokenizedPassword:any=jwt.verify(password, secret as string);
         const auth_method = servicetype;
         // console.log(auth_method);
         //const BASE_API_URL = 'https://api.withmono.com'
@@ -79,15 +77,16 @@ async function monoSessionLoginCredential(req, res, next) {
                 return res.status(400).json({ status: 400, message: result });
             }
             console.log(result);
-            const record = await exchangeToken_1.ExchangeTokenInstance.update({ logintoken: result.data.code }, { where: { userId: userId } });
-            const recordOut = await exchangeToken_1.ExchangeTokenInstance.findOne({ where: { userId: userId } });
+            //    const record = await ExchangeTokenInstance.update({ logintoken:result.data.code }, { where: { userId:userId } });
+            //    const recordOut = await ExchangeTokenInstance.findOne({ where: { userId:userId } });
             const linkedDetails = await linkedBanks_1.LinkedBankInstance.create({
                 bankId: bankId,
                 userId: userId,
                 icon: icon,
                 bankName: bankName,
-                username: detokenizedUsername,
-                password: detokenizedPassword,
+                username: tokenizedUsername,
+                password: tokenizedPassword,
+                serviceType: servicetype,
                 wallet: 0.00,
             });
             return res.status(200).json({ status: 200, msg: 'Mono Login successful', linkedDetails });

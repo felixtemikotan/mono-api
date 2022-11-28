@@ -37,11 +37,15 @@ LinkedBankInstance.init({
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
+    serviceType: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false
+    },
     wallet: {
         type: sequelize_1.DataTypes.FLOAT,
         defaultValue: 0.00,
         allowNull: false
-    }
+    },
 }, {
     sequelize: config_1.default,
     tableName: 'linkedBanksTable'

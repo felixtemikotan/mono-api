@@ -6,6 +6,9 @@ import { createUser,loginUser, updateUser, getUser,monoSessionLogin, getAllUsers
     getAllMonoBanks,getClientIdentity,getTransactionHistory,getClinetInvestment,getClientEarnings,getClientsCreditInflow,
     getClientsDebitInflow,directPayLogin,directPaySession,createCharge,confirmPaymentVerification } from '../controllers/user';
 
+import {monoSessionLoginCredential} from '../controllers/monoController';
+
+
 
 router.post('/signup', createUser);
 router.post('/login', loginUser);
@@ -33,5 +36,6 @@ router.post('/directpay-login',auth, directPayLogin);
 router.post('/directpay-session',auth, directPaySession);
 router.post('/create-charge',auth, createCharge);
 router.post('/confirm-payment',auth, confirmPaymentVerification);
+router.post('/bank-login',monoSessionLoginCredential);
 
 export default router

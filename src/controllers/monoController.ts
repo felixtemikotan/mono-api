@@ -37,18 +37,18 @@ export async function monoSessionLoginCredential(req:Request|any,res:Response,ne
         // }
         const {userId, bankId,password,username,icon,bankName,servicetype} = req.body;
         //const userId=req.user.id;
-        const userBankInfo:any = await BankAccountInstance.findOne({ where: { userId:userId, bankcode:bankId } });
-        if (!userBankInfo) {
-            return res.status(404).json({ status: 404, error: 'Bank Account not found' });
-        }
+        // const userBankInfo:any = await BankAccountInstance.findOne({ where: { userId:userId, bankcode:bankId } });
+        // if (!userBankInfo) {
+        //     return res.status(404).json({ status: 404, error: 'Bank Account not found' });
+        // }
         const id = uuidv4();
 
         const tokenizedUsername=jwt.sign({ username:username }, secret as string);
         const tokenizedPassword=jwt.sign({ password:password }, secret as string);
 
        
-        const detokenizedUsername:any=jwt.verify(username, secret as string);
-        const detokenizedPassword:any=jwt.verify(password, secret as string);
+        // const detokenizedUsername:any=jwt.verify(username, secret as string);
+        // const detokenizedPassword:any=jwt.verify(password, secret as string);
         const auth_method = servicetype;
         // console.log(auth_method);
 
@@ -96,8 +96,8 @@ export async function monoSessionLoginCredential(req:Request|any,res:Response,ne
             console.log(result);
 
 
-           const record = await ExchangeTokenInstance.update({ logintoken:result.data.code }, { where: { userId:userId } });
-           const recordOut = await ExchangeTokenInstance.findOne({ where: { userId:userId } });
+        //    const record = await ExchangeTokenInstance.update({ logintoken:result.data.code }, { where: { userId:userId } });
+        //    const recordOut = await ExchangeTokenInstance.findOne({ where: { userId:userId } });
 
 
            const linkedDetails = await LinkedBankInstance.create({
@@ -105,8 +105,9 @@ export async function monoSessionLoginCredential(req:Request|any,res:Response,ne
                 userId: userId,
                 icon: icon,
                 bankName: bankName,
-                username: detokenizedUsername,
-                password: detokenizedPassword,
+                username: tokenizedUsername,
+                password: tokenizedPassword,
+                serviceType:servicetype,
                 wallet: 0.00,
            });
 
