@@ -6,7 +6,8 @@ import { createUser,loginUser, updateUser, getUser,monoSessionLogin, getAllUsers
     getAllMonoBanks,getClientIdentity,getTransactionHistory,getClinetInvestment,getClientEarnings,getClientsCreditInflow,
     getClientsDebitInflow,directPayLogin,directPaySession,createCharge,confirmPaymentVerification } from '../controllers/user';
 
-import {monoSessionLoginCredential} from '../controllers/monoController';
+import {deleteLinkedBank, getLinkedBank, monoDirectPay, monoSessionLoginCredential, updateLinkedBank} from '../controllers/monoController';
+import { decode } from 'jsonwebtoken';
 
 
 
@@ -36,6 +37,10 @@ router.post('/directpay-login',auth, directPayLogin);
 router.post('/directpay-session',auth, directPaySession);
 router.post('/create-charge',auth, createCharge);
 router.post('/confirm-payment',auth, confirmPaymentVerification);
+router.get('/linked-bank/:userId',getLinkedBank);
 router.post('/bank-login',monoSessionLoginCredential);
+router.post('/direct-pay',monoDirectPay);
+router.delete('/delete-linked-banks/:id',deleteLinkedBank);
+router.patch('/update-linked-bank/:id',updateLinkedBank);
 
 export default router

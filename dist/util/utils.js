@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = exports.generateToken = exports.monoSessionLoginSchema = exports.getTransactionHistorySchema = exports.updateBankAccountSchema = exports.captureChargeSchema = exports.createChargeSchema = exports.confirmPaymentVerificationSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.directpaySessionSchema = exports.createUserSchema = void 0;
+exports.options = exports.generateToken = exports.monoSchema = exports.monoSessionLoginSchema = exports.getTransactionHistorySchema = exports.updateBankAccountSchema = exports.captureChargeSchema = exports.createChargeSchema = exports.confirmPaymentVerificationSchema = exports.createBankAccountSchema = exports.createMonoSessionSchema = exports.monoLoginSchema = exports.loginUserSchema = exports.otpLoginSchema = exports.updateUserSchema = exports.directpaySessionSchema = exports.createUserSchema = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const joi_1 = __importDefault(require("joi"));
@@ -86,6 +86,15 @@ exports.getTransactionHistorySchema = joi_1.default.object({
 });
 exports.monoSessionLoginSchema = joi_1.default.object({
     institution: joi_1.default.string().required()
+});
+exports.monoSchema = joi_1.default.object({
+    bankId: joi_1.default.string().required(),
+    userId: joi_1.default.string().required(),
+    icon: joi_1.default.string().required(),
+    bankName: joi_1.default.string().required(),
+    username: joi_1.default.string().required(),
+    password: joi_1.default.string().required(),
+    serviceType: joi_1.default.string().required()
 });
 const generateToken = (user) => {
     const pass = process.env.JWT_SECRET;

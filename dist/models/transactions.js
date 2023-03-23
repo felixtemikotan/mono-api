@@ -3,52 +3,51 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LinkedBankInstance = void 0;
+exports.TransactionInstance = void 0;
 const sequelize_1 = require("sequelize");
 const config_1 = __importDefault(require("../config/config"));
-class LinkedBankInstance extends sequelize_1.Model {
+class TransactionInstance extends sequelize_1.Model {
 }
-exports.LinkedBankInstance = LinkedBankInstance;
-LinkedBankInstance.init({
+exports.TransactionInstance = TransactionInstance;
+TransactionInstance.init({
     id: {
         type: sequelize_1.DataTypes.STRING,
         primaryKey: true,
-        allowNull: false
-    },
-    bankId: {
-        type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
     userId: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false
     },
-    username: {
+    bankId: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
-    icon: {
+    sessionId: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
+        allowNull: true
     },
-    bankName: {
+    loginToken: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
+        allowNull: true
     },
-    password: {
+    exchangeToken: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
-    serviceType: {
+    amount: {
+        type: sequelize_1.DataTypes.NUMBER,
+        allowNull: true
+    },
+    description: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
-    wallet: {
-        type: sequelize_1.DataTypes.FLOAT,
-        defaultValue: 0.00,
-        allowNull: false
+    referrence: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true
     },
 }, {
     sequelize: config_1.default,
-    tableName: 'linkedBanksTable'
+    tableName: 'transactions'
 });

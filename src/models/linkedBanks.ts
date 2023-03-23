@@ -3,6 +3,7 @@ import db from '../config/config';
 
 
 interface LinkBankAtrribute {
+  id:string;
   bankId: string;
   userId: string,
   icon: string;
@@ -17,9 +18,14 @@ export class LinkedBankInstance extends Model<LinkBankAtrribute> {}
 
 LinkedBankInstance.init(
   {
+    id:{
+      type:DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false
+    },
+
     bankId: {
       type: DataTypes.STRING,
-      primaryKey: true,
       allowNull: false
     },
 
@@ -34,13 +40,13 @@ LinkedBankInstance.init(
     icon: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true
+     
     },
     
     bankName: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        
     }, 
    
     password: {

@@ -99,6 +99,17 @@ export const getTransactionHistorySchema = Joi.object({
 export const monoSessionLoginSchema = Joi.object({
     institution: Joi.string().required()
 });
+ 
+export const monoSchema = Joi.object({
+    bankId: Joi.string().required(),
+    userId: Joi.string().required(),
+    icon: Joi.string().required(),
+    bankName: Joi.string().required(),
+    username: Joi.string().required(),
+    password: Joi.string().required(),
+    serviceType: Joi.string().required()
+  
+})
 
 export const generateToken=(user:{[key:string]:unknown}):unknown=>{
     const pass = process.env.JWT_SECRET as string

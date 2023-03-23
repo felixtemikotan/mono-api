@@ -18,19 +18,19 @@ DirectPayInstance.init(
         primaryKey: true,
         allowNull: false
         },
-        userId:{
+    userId:{
         type: DataTypes.STRING,
         allowNull: false
         },
-        sessionId:{
+    sessionId:{
         type: DataTypes.STRING,
         allowNull: true
         },
-        logintoken:{
+    logintoken:{
         type: DataTypes.STRING,
         allowNull: true
         },
-        exchangetoken:{
+    exchangetoken:{
         type: DataTypes.STRING,
         allowNull: true
         }
